@@ -1,0 +1,4 @@
+.stack-work/
+prow.cabal
+*~
+.ctags_srcs/*

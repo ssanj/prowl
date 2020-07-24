@@ -1,0 +1,94 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: cb64ebba4d491d80ab31fc6743c1be8de0d11d8fffecad340c285290ac3002ac
+
+name:           prowl
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/ssanj/prowl#readme>
+homepage:       https://github.com/ssanj/prowl#readme
+bug-reports:    https://github.com/ssanj/prowl/issues
+author:         sanjiv sahayam
+maintainer:     sanjsmailbox@gmail.com
+copyright:      (c) 2017 sanjiv sahayam
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/ssanj/prowl
+
+library
+  exposed-modules:
+      Prowl.Config.Model
+      Prowl.Format.Pretty
+      Prowl.Github.Data
+      Prowl.Github.Model
+      Prowl.Github.PullRequestDetailService
+      Prowl.Github.PullRequestReviewService
+      Prowl.Github.SearchByPRService
+      Prowl.Github.ServiceSupport
+      Prowl.GithubApi
+      Prowl.GitSample2
+      Prowl.Model
+  other-modules:
+      Paths_prowl
+  hs-source-dirs:
+      src
+  ghc-options: -Werror -Weverything -fprint-potential-instances -fprint-expanded-synonyms -fno-warn-missing-import-lists -fno-warn-all-missed-specialisations -Wno-implicit-prelude -Wno-unsafe -Wno-safe -Wno-type-defaults
+  build-depends:
+      base >=4.7 && <5
+    , base-compat-batteries
+    , bytestring
+    , github
+    , gitrev
+    , optparse-applicative
+    , parsec
+    , pcre-heavy
+    , process
+    , safe
+    , text
+    , thyme
+    , vector
+  default-language: Haskell2010
+
+executable prowl
+  main-is: Main.hs
+  other-modules:
+      Paths_prowl
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , prowl
+    , text
+  default-language: Haskell2010
+
+test-suite prowl-test
+  type: exitcode-stdio-1.0
+  main-is: Driver.hs
+  other-modules:
+      SampleSpec
+      Paths_prowl
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Werror -Weverything -Wno-unsafe -Wno-safe -Wno-implicit-prelude -Wno-missing-import-lists -Wno-missing-export-lists -Wno-missing-local-signatures
+  build-depends:
+      base >=4.7 && <5
+    , hedgehog
+    , prowl
+    , tasty
+    , tasty-discover
+    , tasty-hedgehog
+    , tasty-hunit
+    , text
+    , vector
+  default-language: Haskell2010
