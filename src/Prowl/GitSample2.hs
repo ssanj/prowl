@@ -22,8 +22,9 @@ processMatches :: Vector PullRequest -> IO ()
 processMatches = T.putStrLn . printPRs
                       where printPRs :: Vector PullRequest -> T.Text
                             printPRs prs =
-                              let prBlocks = (T.intercalate "\n" . printPullRequest) <$> prs
-                              in  T.intercalate "\n\n----------\n\n" . toList $ prBlocks
+                              let header  = "\nProwl\n=====\n\n" :: T.Text
+                                  prBlocks = T.intercalate "\n" . printPullRequest <$> prs
+                              in  header <> (T.intercalate "\n\n----------\n\n" . toList $ prBlocks)
 
 performSearchByPR :: GithubAuth -> GithubOrg -> IO ()
 performSearchByPR auth org = do

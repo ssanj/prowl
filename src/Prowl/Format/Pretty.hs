@@ -28,19 +28,19 @@ printTitle :: PullRequest -> Text
 printTitle = _prowlPullRequestTitle
 
 printIssueNumber :: PullRequest -> Text
-printIssueNumber pr = ("PR Number: " <>) . pack . show . _prowlPullRequestIssueNumberValue . _prowlPullRequestIssueNumber $ pr
+printIssueNumber = ("PR Number: " <>) . pack . show . _prowlPullRequestIssueNumberValue . _prowlPullRequestIssueNumber
 
 printRepo :: PullRequest -> Text
-printRepo pr = ("Repo: " <>) . _prowlGithubRepo . _prowlPullRequestDetailRepo . _prowlPullRequestDetail $ pr
+printRepo = ("Repo: " <>) . _prowlGithubRepo . _prowlPullRequestDetailRepo . _prowlPullRequestDetail
 
 printBranch :: PullRequest -> Text
-printBranch pr = ("Branch: " <>) . _prowlPullRequestBranchValue . _prowlPullRequestDetailBranch . _prowlPullRequestDetail $ pr
+printBranch = ("Branch: " <>) . _prowlPullRequestBranchValue . _prowlPullRequestDetailBranch . _prowlPullRequestDetail
 
 printAuthor :: PullRequest -> Text
-printAuthor pr = ("Author: " <>) . _prowlPullRequestUserValue . _prowlPullRequestIssueUser $ pr
+printAuthor = ("Author: " <>) . _prowlPullRequestUserValue . _prowlPullRequestIssueUser
 
 printURL :: PullRequest -> Text
-printURL pr = ("Link: " <>) . untagUrlFor . _prowlPullRequestDetailURL . _prowlPullRequestDetail $ pr
+printURL = ("Link: " <>) . untagUrlFor . _prowlPullRequestDetailURL . _prowlPullRequestDetail
 
 printReviews :: PullRequest -> Text
 printReviews pr =
@@ -56,12 +56,12 @@ printReviews pr =
   in pack $ F.fold [
        "Review: "
      , "approved("
-     , (show approved)
+     , show approved
      , ") changes("
-     , (show changesRequested)
+     , show changesRequested
      , ") comments("
-     , (show commented)
+     , show commented
      , ") dismissed("
-     , (show dismissed)
+     , show dismissed
      , ")"
      ]
