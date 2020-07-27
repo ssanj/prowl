@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Prowl.GitSample2 (main) where
+module Prowl.ProwlApp (main) where
 
 import Prelude.Compat
 import Prowl.GithubApi
@@ -13,6 +13,7 @@ import Data.Vector (Vector, toList)
 
 import qualified Data.Text.IO as T
 import qualified Data.Text    as T
+import Control.Exception (SomeException, catch, displayException)
 
 main :: GithubAuth -> T.Text -> IO ()
 main gauth org = do
@@ -29,4 +30,7 @@ processMatches = T.putStrLn . printPRs
 performSearchByPR :: GithubAuth -> GithubOrg -> IO ()
 performSearchByPR auth org = do
   matches <- searchByPR auth org
-  processMatches matches --TODO: handle errors here
+  processMatches matches `catch` generalErrorHandler
+
+generalErrorHandler :: SomeException -> IO ()
+generalErrorHandler ex = T.putStrLn $ "Prowl failed: " <> (T.pack . displayException $ ex)

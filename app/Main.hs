@@ -2,10 +2,10 @@
 
 module Main where
 
-import qualified Prowl.GitSample2    as P
+import qualified Prowl.ProwlApp      as P
 import qualified Prowl.Config.Model  as P
-import qualified System.Environment as SYS
-import qualified Data.Text          as T
+import qualified System.Environment  as SYS
+import qualified Data.Text           as T
 
 import Data.String (IsString(..))
 
