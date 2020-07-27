@@ -45,17 +45,15 @@ createPullRequestIssueNumber = PullRequestIssueNumber . G.unIssueNumber . G.issu
 getRepoUrlMaybe :: G.URL -> IO GithubRepo
 getRepoUrlMaybe url = do
   let maybRepo = getIssueRepoFromURL url
-  processResult $ maybe (Left $ "Could not find repo in " <> (show url)) Right maybRepo
+  processResult $ maybe (Left $ "Could not find repo in " <> show url) Right maybRepo
 
-createPullRequest :: G.Issue -> PullRequestIssueNumber -> PullRequestDetail -> (Vector PullRequestReview) -> PullRequest
-createPullRequest issue issueNumber detail reviews =
+createPullRequest :: G.Issue -> PullRequestIssueNumber -> PullRequestDetail -> Vector PullRequestReview -> PullRequest
+createPullRequest issue issueNumber =
     PullRequest
       (G.issueTitle issue)
       (getState . G.issueState $ issue)
       issueNumber
       (getIssueUser . G.issueUser $ issue)
-      detail
-      reviews
 
 getIssueUser :: G.SimpleUser -> PullRequestUser
 getIssueUser = PullRequestUser . G.untagName . G.simpleUserLogin
