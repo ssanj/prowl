@@ -38,6 +38,8 @@ library:
   - vector
   - pcre-heavy
   - safe
+  - chronos
+  - attoparsec
 
   ghc-options:
   - -Werror

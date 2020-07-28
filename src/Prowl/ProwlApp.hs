@@ -1,36 +1,52 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Prowl.ProwlApp (main) where
 
-import Prelude.Compat
-import Prowl.GithubApi
-import Prowl.Model
-import Prowl.Format.Pretty (printPullRequest)
+import qualified Prowl.GithubApi           as P
+import qualified Prowl.Program.ProwlSearch as APP
+import qualified Prowl.Config.Model        as P
+import qualified Prowl.Model               as P
+import qualified System.Environment        as SYS
+import qualified Data.Text                 as T
 
-import Data.Vector (Vector, toList)
+import Data.String (IsString(..))
 
-import qualified Data.Text.IO as T
-import qualified Data.Text    as T
-import Control.Exception (SomeException, catch, displayException)
+main :: IO ()
+main = do
+  auth <- createGithubAuth
+  (org, creationDate) <- getArguments
+  APP.main auth org creationDate
 
-main :: GithubAuth -> T.Text -> IO ()
-main gauth org = do
-  performSearchByPR gauth (GithubOrg org)
+getArguments :: IO (P.GithubOrg, P.ProwlCreationDate)
+getArguments = do
+  args <- SYS.getArgs
+  case args of
+    []                  -> ioError . userError $ usage
+    [org]               -> (createRepo org,) <$> P.defaultCreationDate
+    [org, creationDate] -> (createRepo org,) <$> (getCreationDate creationDate)
+    other               -> ioError . userError $ ("Invalid arguments: " <> show other)
 
-processMatches :: Vector PullRequest -> IO ()
-processMatches = T.putStrLn . printPRs
-                      where printPRs :: Vector PullRequest -> T.Text
-                            printPRs prs =
-                              let header  = "\nProwl\n=====\n\n" :: T.Text
-                                  prBlocks = T.intercalate "\n" . printPullRequest <$> prs
-                              in  header <> (T.intercalate "\n\n----------\n\n" . toList $ prBlocks)
+createRepo :: String -> P.GithubOrg
+createRepo = P.GithubOrg . T.pack
 
-performSearchByPR :: GithubAuth -> GithubOrg -> IO ()
-performSearchByPR auth org = do
-  matches <- searchByPR auth org
-  processMatches matches `catch` generalErrorHandler
+getCreationDate :: String -> IO P.ProwlCreationDate
+getCreationDate inputCreationDate =
+  let maybeCreationDate = P.parseCreationDate . T.pack $ inputCreationDate
+  in maybe (ioError . userError $ creationDateFormat) pure maybeCreationDate
 
-generalErrorHandler :: SomeException -> IO ()
-generalErrorHandler ex = T.putStrLn $ "Prowl failed: " <> (T.pack . displayException $ ex)
+creationDateFormat :: String
+creationDateFormat = "invalid creation_date format. Use: YYYY-MM-DD"
+
+usage :: String
+usage = "usage: prowl organisation <creation_date YYYY-MM-DD>"
+
+createGithubAuth :: IO P.GithubAuth
+createGithubAuth =
+  P.GithubAuth                                            <$>
+    (P.GithubApi   <$> fromSystemEnv "PROW_GITHUB_API")   <*>
+    (P.GithubToken <$> fromSystemEnv "PROW_GITHUB_TOKEN")
+
+
+fromSystemEnv :: IsString a => String -> IO a
+fromSystemEnv key = fromString <$> SYS.getEnv key

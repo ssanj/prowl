@@ -18,6 +18,7 @@ module Prowl.Github.Model
        ,  GithubRepo(..)
        ,  GithubPR
        ,  UrlFor
+       ,  ProwlCreationDate(..)
 
           -- Functions
        ,  mkUrlFor
@@ -94,5 +95,10 @@ type GitHubApiError = Either Text
 data PullRequestState = PullRequestOpen | PullRequestClosed deriving stock (Show, Eq)
 
 data ProwlException = ProwlException Text deriving stock Show
+
+newtype ProwlCreationDate =
+  ProwlCreationDate {
+    _prowlCreationDateValue :: Text
+  } deriving stock (Show, Eq)
 
 instance Exception ProwlException

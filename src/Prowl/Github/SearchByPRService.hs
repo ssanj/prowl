@@ -16,9 +16,9 @@ import Data.Vector      (Vector)
 import qualified GitHub as G
 
 --TODO: Parameterise this
-searchByPR :: GithubAuth -> GithubOrg -> IO (Vector PullRequest)
-searchByPR auth (GithubOrg org) = do
-  let query = "org:" <> org <> " is:open is:pr created:>=2020-06-01"
+searchByPR :: GithubAuth -> GithubOrg -> ProwlCreationDate -> IO (Vector PullRequest)
+searchByPR auth (GithubOrg org) (ProwlCreationDate creationDate)= do
+  let query = "org:" <> org <> " is:open is:pr created:>=" <> creationDate
   matchesE <- G.executeRequest (toEntAuth auth) (G.searchIssuesR query)
   matches <- processResult matchesE
   processMatches auth (GithubOrg org) matches

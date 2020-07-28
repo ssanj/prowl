@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 67a4fcac81304d509d3b6239bf4b6cd2b78335577c4884793403f59d0eabf110
+-- hash: ec7ffdaa3714144c13a4f014cf9f0f04a574fe5b03734c95ce1b69a87798a531
 
 name:           prowl
 version:        0.1.0.0
@@ -35,8 +35,10 @@ library
       Prowl.Github.PullRequestReviewService
       Prowl.Github.SearchByPRService
       Prowl.Github.ServiceSupport
+      Prowl.Github.Time
       Prowl.GithubApi
       Prowl.Model
+      Prowl.Program.ProwlSearch
       Prowl.ProwlApp
   other-modules:
       Paths_prowl
@@ -44,9 +46,11 @@ library
       src
   ghc-options: -Werror -Weverything -fprint-potential-instances -fprint-expanded-synonyms -fno-warn-missing-import-lists -fno-warn-all-missed-specialisations -Wno-implicit-prelude -Wno-unsafe -Wno-safe -Wno-type-defaults
   build-depends:
-      base >=4.7 && <5
+      attoparsec
+    , base >=4.7 && <5
     , base-compat-batteries
     , bytestring
+    , chronos
     , github
     , gitrev
     , optparse-applicative
