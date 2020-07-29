@@ -28,7 +28,7 @@ processMatches = T.putStrLn . printPRs
 
 performSearchByPR :: GithubAuth -> GithubOrg -> ProwlCreationDate -> IO ()
 performSearchByPR auth org creationDate = do
-  matches <- searchByPR auth org creationDate
+  matches <- searchByPR auth org CreationDate creationDate
   processMatches matches `catch` generalErrorHandler
 
 generalErrorHandler :: SomeException -> IO ()
