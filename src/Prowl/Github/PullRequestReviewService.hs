@@ -10,6 +10,8 @@ import Prowl.Github.ServiceSupport
 import Data.Vector (Vector)
 
 import qualified GitHub as G
+import qualified Data.Text.IO as T
+import qualified Data.Text as T
 
 createPullRequestReview :: G.Review -> PullRequestReview
 createPullRequestReview review =
@@ -30,5 +32,6 @@ getReviewsForPR auth (GithubOrg org) ghRepo (PullRequestIssueNumber prIssueNumbe
       repoName    = G.mkRepoName . _prowlGithubRepo $ ghRepo
       issueNumber = G.IssueNumber prIssueNumber
   reviewsE <- G.executeRequest (toEntAuth auth) (G.pullRequestReviewsR ownerName repoName issueNumber G.FetchAll)
+  T.putStrLn . T.pack . show $ reviewsE
   reviews <- processResult reviewsE
   pure $ createPullRequestReview <$> reviews

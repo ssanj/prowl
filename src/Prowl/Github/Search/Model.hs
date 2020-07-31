@@ -3,7 +3,7 @@
 module Prowl.Github.Search.Model
        (
           -- Data types
-          GithubSearchDate(..)
+          XGithubSearchDate(..)
        ) where
 
-data GithubSearchDate = CreationDate | UpdationDate deriving stock (Show, Eq)
+data XGithubSearchDate = XCreationDate | XUpdationDate deriving stock (Show, Eq)

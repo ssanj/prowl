@@ -1,6 +1,7 @@
 module Main where
 
 import qualified Prowl.ProwlApp as APP
+import Prowl.Commandline.CommandlineOptions (parseArguments)
 
 main :: IO ()
-main = APP.main
+main = parseArguments >>= APP.main

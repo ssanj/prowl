@@ -3,8 +3,8 @@
 module Prowl.Github.Time
        (
           -- Functions
-          parseCreationDate
-       ,  defaultCreationDate
+          parseProwlDate
+       ,  yesterdayDate
        ) where
 
 import qualified Chronos                as C
@@ -13,15 +13,14 @@ import qualified Data.Text              as T
 import qualified Data.Text.Lazy.Builder as LT
 import qualified Data.Text.Lazy         as LT
 
-import Prowl.Model (ProwlCreationDate(..))
+import Prowl.Model (ProwlDate(..))
 
 -- format: YYYY-DD-MM
-parseCreationDate :: T.Text -> Maybe ProwlCreationDate
-parseCreationDate creationDate =
-  case A.parse (C.parser_Ymd (Just '-')) creationDate of
-    A.Done _ _ -> Just . ProwlCreationDate $ creationDate -- just verify that the date is valid
+parseProwlDate :: T.Text -> Maybe ProwlDate
+parseProwlDate prowlDate  =
+  case A.parse (C.parser_Ymd (Just '-')) prowlDate  of
+    A.Done _ _ -> Just . ProwlDate $ prowlDate  -- just verify that the date is valid
     _        -> Nothing
 
-defaultCreationDate :: IO ProwlCreationDate
-defaultCreationDate =  (ProwlCreationDate . LT.toStrict . LT.toLazyText . C.builder_Ymd (Just '-') . C.dayToDate) <$> C.yesterday
-
+yesterdayDate :: IO ProwlDate
+yesterdayDate =  (ProwlDate . LT.toStrict . LT.toLazyText . C.builder_Ymd (Just '-') . C.dayToDate) <$> C.yesterday

@@ -18,7 +18,7 @@ module Prowl.Github.Model
        ,  GithubRepo(..)
        ,  GithubPR
        ,  UrlFor
-       ,  ProwlCreationDate(..)
+       ,  GithubSearchDate(..)
 
           -- Functions
        ,  mkUrlFor
@@ -28,6 +28,7 @@ module Prowl.Github.Model
 import Control.Exception (Exception)
 import Data.Text (Text)
 import Data.Vector (Vector)
+import Prowl.Config.Model (ProwlDate)
 
 newtype GithubOrg = GithubOrg Text deriving stock (Show, Eq)
 
@@ -96,9 +97,12 @@ data PullRequestState = PullRequestOpen | PullRequestClosed deriving stock (Show
 
 data ProwlException = ProwlException Text deriving stock Show
 
-newtype ProwlCreationDate =
-  ProwlCreationDate {
-    _prowlCreationDateValue :: Text
+data GithubSearchDate =
+  CreationDate {
+    _prowlGithubSearchDateCreationDate :: ProwlDate
+  } |
+  UpdationDate {
+    _prowlGithubSearchDateCreationDate :: ProwlDate
   } deriving stock (Show, Eq)
 
 instance Exception ProwlException

@@ -10,7 +10,6 @@ import Prowl.Github.ServiceSupport
 import Prowl.Github.Data                     (getIssueRepoFromURL)
 import Prowl.Github.PullRequestDetailService (getDetailsForPR)
 import Prowl.Github.PullRequestReviewService (getReviewsForPR)
-import Prowl.Github.Search.Model (GithubSearchDate(..))
 
 import Data.Vector      (Vector)
 
@@ -18,16 +17,21 @@ import qualified GitHub    as G
 import qualified Data.Text as T
 
 --TODO: Parameterise this
-searchByPR :: GithubAuth -> GithubOrg -> GithubSearchDate -> ProwlCreationDate -> IO (Vector PullRequest)
-searchByPR auth (GithubOrg org) searchDateType (ProwlCreationDate creationDate)= do
-  let query = "org:" <> org <> " is:open is:pr " <> (getDateType searchDateType) <> ":>=" <> creationDate
+searchByPR :: GithubAuth -> GithubOrg -> GithubSearchDate -> IO (Vector PullRequest)
+searchByPR auth (GithubOrg org) searchDateType = do
+  let query = "org:" <> org <> " is:open is:pr " <> (getDateType searchDateType) <> ":>=" <> (getDateValue searchDateType)
   matchesE <- G.executeRequest (toEntAuth auth) (G.searchIssuesR query)
+
   matches <- processResult matchesE
   processMatches auth (GithubOrg org) matches
 
 getDateType :: GithubSearchDate -> T.Text
-getDateType CreationDate = "created"
-getDateType UpdationDate = "updated"
+getDateType (CreationDate _) = "created"
+getDateType (UpdationDate _) = "updated"
+
+getDateValue :: GithubSearchDate -> T.Text
+getDateValue (CreationDate (ProwlDate date)) = date
+getDateValue (UpdationDate (ProwlDate date)) = date
 
 processMatches :: GithubAuth -> GithubOrg -> G.SearchResult G.Issue -> IO (Vector PullRequest)
 processMatches auth org matches = traverse (issueToPR auth org)  (G.searchResultResults matches)
