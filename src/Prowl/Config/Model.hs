@@ -40,5 +40,3 @@ data ProwlSearchByDateType = ProwlSearchByCreatedDate Text | ProwlSearchByUpdate
 data SearchType = SearchByCreatedDate ProwlDate
                 | SearchByUpdatedDate ProwlDate
                 | SearchByDateTypeNotSupplied deriving stock (Eq, Show)
-
---newtype ProwlSearchDate = ProwlSearchDate (Chronos Date)

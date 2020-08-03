@@ -1,5 +1,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 
+
 module Prowl.Commandline.Model
        (
           -- Data types
