@@ -30,15 +30,21 @@ processMatches prs handler =
 
 handleMenu :: T.Text -> V.Vector a -> (V.Vector a -> T.Text) -> (a -> IO ()) -> IO ()
 handleMenu prompt results renderer handler = do
-  let retry :: IO ()
-      retry = handleMenu prompt results renderer handler
   T.putStrLn . renderer $ results
+  processInput prompt results renderer handler
+
+processInput :: T.Text -> V.Vector a -> (V.Vector a -> T.Text) -> (a -> IO ()) -> IO ()
+processInput prompt results renderer handler = do
+  let retry :: IO ()
+      retry = processInput prompt results renderer handler
+
+  T.putStrLn ""
   T.putStrLn prompt
   inputE <- try readLn :: IO (Either SomeException Int)
   case inputE of
     Left _      -> retry
     Right input ->
-      if input >= 0 && input < (V.length results) then maybe retry handler (results V.!? input)
+      if input >= 1 && input <= (V.length results) then maybe retry handler (results V.!? (input - 1))
       else retry
 
 printPRs :: V.Vector (Int, PullRequest) -> T.Text
