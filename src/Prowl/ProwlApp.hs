@@ -35,37 +35,6 @@ toGithubSearchDate (P.SearchByCreatedDate date) _ = P.CreationDate date
 toGithubSearchDate (P.SearchByUpdatedDate date) _ = P.UpdationDate date
 toGithubSearchDate P.SearchByDateTypeNotSupplied defaultDate = P.UpdationDate defaultDate
 
--- getArguments :: IO (P.GithubOrg, P.GithubSearchDate)
--- getArguments = do
---   args <- SYS.getArgs
---   case args of
---     []                  -> ioError . userError $ usage
---     [org]               -> (\pd -> (createRepo org, P.UpdationDate pd)) <$> P.yesterdayDate
---     [org, searchType, searchDate] -> (createRepo org,) <$> (getSearchDate searchType searchDate)
---     other               -> ioError . userError $ ("Invalid arguments: " <> show other)
-
--- createRepo :: String -> P.GithubOrg
--- createRepo = P.GithubOrg . T.pack
-
--- getSearchDate :: String -> String -> IO P.GithubSearchDate
--- getSearchDate "created" date = P.CreationDate <$> (getProwlDate date)
--- getSearchDate "updated" date = P.UpdationDate <$> (getProwlDate date)
--- getSearchDate _ _ = ioError . userError $ invalidSearchDateType
-
--- getProwlDate :: String -> IO P.ProwlDate
--- getProwlDate date =
---   let maybeProwlDate = P.parseProwlDate . T.pack $ date
---   in maybe (ioError . userError $ invalidDateFormat) pure maybeProwlDate
-
--- invalidDateFormat :: String
--- invalidDateFormat = "invalid date format. Use: YYYY-MM-DD"
-
--- invalidSearchDateType :: String
--- invalidSearchDateType = "Invalid arguments: search type must be one of 'created' or 'updated'"
-
--- usage :: String
--- usage = "usage: prowl organisation <(created|updated) date YYYY-MM-DD>"
-
 createGithubAuth :: IO P.GithubAuth
 createGithubAuth =
   P.GithubAuth                                            <$>
