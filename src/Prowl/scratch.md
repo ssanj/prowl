@@ -20,3 +20,24 @@ Search for a PR that is:
 ```
 curl -v -H 'Authorization: bearer --something-- https://github-provider/api/v3/search/issues?q=org:your_org+is:open+is:pr+review:none+draft:false+created:%3E2020-07-01
 ```
+
+## Workflow
+
+### Needed
+- clone url
+- working dir
+- hash for PR ?
+
+### Create
+
+- mkdir -p <workdir>/:org/:repo/branch/hash
+cd <workdir>/:org/:repo/branch/hash
+git clone <clone url> -b branch .
+
+### Run
+
+//one script to run them all?
+auto/test
+sbt getCtags
+menu
+s .

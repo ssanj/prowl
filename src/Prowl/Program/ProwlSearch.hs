@@ -12,10 +12,13 @@ import Prowl.Program.Menu
 import Data.Tuple          (swap)
 import Control.Exception   (SomeException, catch, displayException)
 import Prowl.Format.Pretty (printPullRequest)
+import Prowl.Program.Model (UserSelection(..))
 
 import qualified Data.Vector  as V
 import qualified Data.Text.IO as T
 import qualified Data.Text    as T
+import qualified Data.Text.Lazy as LT
+import qualified Data.Aeson.Text  as A
 
 main :: GithubAuth -> GithubOrg -> GithubSearchDate -> IO ()
 main = performSearchByPR
@@ -23,21 +26,34 @@ main = performSearchByPR
 performSearchByPR :: GithubAuth -> GithubOrg -> GithubSearchDate -> IO ()
 performSearchByPR auth org searchDate = do
   matches <- searchByPR auth org searchDate
-  processMatches matches `catch` generalErrorHandler
+  -- TODO: Do we want to differentiate between having to choose an item and not?
+  displayMenu org matches `catch` generalErrorHandler
 
-processMatches :: V.Vector PullRequest -> IO ()
-processMatches prs =
+displayMenu :: GithubOrg -> V.Vector PullRequest -> IO ()
+displayMenu org prs =
   createMenu
     prompt
     (oneBasedIndex prs)
     printPRs
-    handlePRSelection
+    (handlePRSelection org)
 
 oneBasedIndex :: V.Vector a -> V.Vector (Int, a)
 oneBasedIndex values = swap . fmap (+1). swap <$> V.indexed values
 
-handlePRSelection :: (Int, PullRequest) -> IO ()
-handlePRSelection = T.putStrLn . ("selected:\n" <>) . T.pack . show
+handlePRSelection :: GithubOrg -> (Int, PullRequest) -> IO ()
+handlePRSelection org = T.putStrLn . LT.toStrict . A.encodeToLazyText . pullRequestToResponse org . snd
+
+pullRequestToResponse :: GithubOrg -> PullRequest -> UserSelection
+pullRequestToResponse (GithubOrg org) pr =
+  let repo          = _prowlGithubRepo . _prowlPullRequestDetailRepo . _prowlPullRequestDetail $ pr
+      branch        = _prowlPullRequestBranchValue . _prowlPullRequestDetailBranch . _prowlPullRequestDetail $ pr
+      prIssueNumber = _prowlPullRequestIssueNumberValue . _prowlPullRequestIssueNumber $ pr
+  in UserSelection {
+       _userSelectionOrg                    = org
+     , _userSelectionRepo                   = repo
+     , _userSelectionBranch                 = branch
+     , _userSelectionPullRequestIssueNumber = prIssueNumber
+     }
 
 generalErrorHandler :: SomeException -> IO ()
 generalErrorHandler ex = T.putStrLn $ "Prowl failed: " <> (T.pack . displayException $ ex)

@@ -18,11 +18,14 @@ module Prowl.Github.Model
        ,  GithubRepo(..)
        ,  GithubPR
        ,  UrlFor
+       ,  SHAFor
        ,  GithubSearchDate(..)
 
           -- Functions
        ,  mkUrlFor
        ,  untagUrlFor
+       ,  mkSHAFor
+       ,  untagSHAFor
        ) where
 
 import Control.Exception (Exception)
@@ -58,6 +61,8 @@ newtype PullRequestReviewUser = PullRequestReviewUser Text deriving stock (Show,
 
 newtype UrlFor a = GithubURL Text deriving stock (Show, Eq)
 
+newtype SHAFor a = GithubSHA Text deriving stock (Show, Eq)
+
 data GithubPR
 
 mkUrlFor :: Text -> UrlFor a
@@ -66,11 +71,18 @@ mkUrlFor = GithubURL
 untagUrlFor :: UrlFor a -> Text
 untagUrlFor (GithubURL value) = value
 
+mkSHAFor :: Text -> SHAFor a
+mkSHAFor = GithubSHA
+
+untagSHAFor :: SHAFor a -> Text
+untagSHAFor (GithubSHA value) = value
+
 data PullRequestDetail =
   PullRequestDetail {
     _prowlPullRequestDetailBranch :: PullRequestBranch
   , _prowlPullRequestDetailRepo   :: GithubRepo
   , _prowlPullRequestDetailURL    :: UrlFor GithubPR
+  , _prowlPullRequestDetailSHA    :: SHAFor GithubPR
   }  deriving stock (Show, Eq)
 
 data PullRequestReviewState
