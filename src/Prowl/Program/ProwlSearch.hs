@@ -31,9 +31,13 @@ performSearchByPR auth org searchDate = do
 displayNoResults :: IO ()
 displayNoResults = T.putStrLn "No matches found"
 
+ripCord :: T.Text
+ripCord = "exit"
+
 displayMenu :: GithubOrg -> V.Vector PullRequest -> IO ()
 displayMenu org prs =
   createMenu
+    ripCord
     prompt
     (oneBasedIndex prs)
     printPRs
@@ -61,7 +65,7 @@ generalErrorHandler :: SomeException -> IO ()
 generalErrorHandler ex = T.putStrLn $ "Prowl failed: " <> (T.pack . displayException $ ex)
 
 prompt :: [T.Text]
-prompt = ["\n", "Please select a PR: "]
+prompt = ["\n", "Please select a PR [number]: or '" <> ripCord <> "' to quit"]
 
 printPRs :: V.Vector (Int, PullRequest) -> T.Text
 printPRs prs =
