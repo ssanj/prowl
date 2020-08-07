@@ -1,10 +1,8 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Prowl.Program.ProwlSearch (main) where
 
-import Prelude.Compat
 import Prowl.GithubApi
 import Prowl.Model
 import Prowl.Program.Menu
@@ -27,7 +25,11 @@ performSearchByPR :: GithubAuth -> GithubOrg -> GithubSearchDate -> IO ()
 performSearchByPR auth org searchDate = do
   matches <- searchByPR auth org searchDate
   -- TODO: Do we want to differentiate between having to choose an item and not?
-  displayMenu org matches `catch` generalErrorHandler
+  if V.null matches then displayNoResults
+  else displayMenu org matches `catch` generalErrorHandler
+
+displayNoResults :: IO ()
+displayNoResults = T.putStrLn "No matches found"
 
 displayMenu :: GithubOrg -> V.Vector PullRequest -> IO ()
 displayMenu org prs =
