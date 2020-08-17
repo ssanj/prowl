@@ -53,11 +53,13 @@ pullRequestToResponse :: GithubOrg -> PullRequest -> UserSelection
 pullRequestToResponse (GithubOrg org) pr =
   let repo          = _prowlGithubRepo . _prowlPullRequestDetailRepo . _prowlPullRequestDetail $ pr
       branch        = _prowlPullRequestBranchValue . _prowlPullRequestDetailBranch . _prowlPullRequestDetail $ pr
+      hash          = untagSHAFor . _prowlPullRequestDetailSHA . _prowlPullRequestDetail $ pr
       prIssueNumber = _prowlPullRequestIssueNumberValue . _prowlPullRequestIssueNumber $ pr
   in UserSelection {
        _userSelectionOrg                    = org
      , _userSelectionRepo                   = repo
      , _userSelectionBranch                 = branch
+     , _userSelectionPRHash                 = hash
      , _userSelectionPullRequestIssueNumber = prIssueNumber
      }
 

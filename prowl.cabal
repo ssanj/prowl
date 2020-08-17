@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0ea01c1d36ce134fbe508b270cec900d1a625c6a7e1a6c51b098e380ad96415d
+-- hash: 01a32a4c3906f2b9b6d1a1945e05e04e5b86554f3897efe58340ec04bb0f7828
 
 name:           prowl
 version:        0.1.0.0
@@ -44,6 +44,7 @@ library
       Prowl.Program.Menu
       Prowl.Program.Model
       Prowl.Program.ProwlSearch
+      Prowl.Program.Terminal
       Prowl.ProwlApp
   other-modules:
       Paths_prowl
@@ -57,6 +58,7 @@ library
     , base-compat-batteries
     , bytestring
     , chronos
+    , directory
     , github
     , gitrev
     , optparse-applicative

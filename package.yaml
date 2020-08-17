@@ -41,6 +41,7 @@ library:
   - chronos
   - attoparsec
   - aeson
+  - directory
 
   ghc-options:
   - -Werror

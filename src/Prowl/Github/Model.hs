@@ -31,7 +31,7 @@ module Prowl.Github.Model
 import Control.Exception (Exception)
 import Data.Text (Text)
 import Data.Vector (Vector)
-import Prowl.Config.Model (ProwlDate)
+import Prowl.Config.Model (ProwlDate, GithubApi)
 
 newtype GithubOrg = GithubOrg Text deriving stock (Show, Eq)
 
@@ -79,8 +79,10 @@ untagSHAFor (GithubSHA value) = value
 
 data PullRequestDetail =
   PullRequestDetail {
-    _prowlPullRequestDetailBranch :: PullRequestBranch
+    _prowlPullRequestDetailApi    :: GithubApi
+  , _prowlPullRequestDetailOrg    :: GithubOrg
   , _prowlPullRequestDetailRepo   :: GithubRepo
+  , _prowlPullRequestDetailBranch :: PullRequestBranch
   , _prowlPullRequestDetailURL    :: UrlFor GithubPR
   , _prowlPullRequestDetailSHA    :: SHAFor GithubPR
   }  deriving stock (Show, Eq)

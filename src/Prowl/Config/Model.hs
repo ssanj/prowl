@@ -11,12 +11,13 @@ module Prowl.Config.Model
        ,  ProwlSearchByDateType(..)
        ,  SearchType(..)
        ,  ProwlDate(..)
+       ,  ProwlWorkDir(..)
        ) where
 
 import Data.Text (Text)
 import Data.ByteString (ByteString)
 
-newtype GithubApi = GithubApi Text
+newtype GithubApi = GithubApi Text deriving stock (Eq, Show)
 
 newtype GithubToken = GithubToken ByteString
 
@@ -40,3 +41,5 @@ data ProwlSearchByDateType = ProwlSearchByCreatedDate Text | ProwlSearchByUpdate
 data SearchType = SearchByCreatedDate ProwlDate
                 | SearchByUpdatedDate ProwlDate
                 | SearchByDateTypeNotSupplied deriving stock (Eq, Show)
+
+newtype ProwlWorkDir = ProwlWorkDir { _prowlWorkDirLocation :: Text } deriving stock (Eq, Show)

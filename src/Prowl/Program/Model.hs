@@ -17,6 +17,7 @@ data UserSelection =
      _userSelectionOrg                    :: Text
   ,  _userSelectionRepo                   :: Text
   ,  _userSelectionBranch                 :: Text
+  ,  _userSelectionPRHash                 :: Text
   ,  _userSelectionPullRequestIssueNumber :: Int
   } deriving stock (Eq, Show, Generic)
 
