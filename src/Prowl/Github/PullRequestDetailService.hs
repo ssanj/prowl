@@ -12,8 +12,8 @@ import qualified GitHub as G
 createPullRequestDetail :: GithubApi -> GithubOrg -> G.PullRequest -> GithubRepo -> PullRequestDetail
 createPullRequestDetail api org pr repo =
   let branch                    = PullRequestBranch . G.pullRequestCommitRef . G.pullRequestHead $ pr
-      sha :: SHAFor GithubPR    = mkSHAFor . G.pullRequestCommitSha . G.pullRequestHead $ pr
-      prUrl :: UrlFor GithubPR  = mkUrlFor . G.getUrl . G.pullRequestHtmlUrl $ pr
+      sha :: TaggedText GithubPRSHA    = mkTextTag . G.pullRequestCommitSha . G.pullRequestHead $ pr
+      prUrl :: TaggedText GithubPRUrl  = mkTextTag . G.getUrl . G.pullRequestHtmlUrl $ pr
   in PullRequestDetail api org repo branch prUrl sha
 
 getDetailsForPR :: GithubAuth -> GithubOrg -> GithubRepo -> PullRequestIssueNumber -> IO PullRequestDetail

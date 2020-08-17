@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 01a32a4c3906f2b9b6d1a1945e05e04e5b86554f3897efe58340ec04bb0f7828
+-- hash: c6e6e5929e8da60a5169fe0010b3d10fe6f1fc5d2b7db25f700e93ca68d2d33f
 
 name:           prowl
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
       Prowl.Github.ServiceSupport
       Prowl.Github.Time
       Prowl.GithubApi
+      Prowl.Handler.DisplaySelection
       Prowl.Model
       Prowl.Program.Menu
       Prowl.Program.Model
@@ -66,6 +67,7 @@ library
     , pcre-heavy
     , process
     , safe
+    , tagged
     , text
     , thyme
     , vector

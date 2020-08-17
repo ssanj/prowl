@@ -40,7 +40,7 @@ printAuthor :: PullRequest -> Text
 printAuthor = ("Author: " <>) . _prowlPullRequestUserValue . _prowlPullRequestIssueUser
 
 printURL :: PullRequest -> Text
-printURL = ("Link: " <>) . untagUrlFor . _prowlPullRequestDetailURL . _prowlPullRequestDetail
+printURL = ("Link: " <>) . unmkTextTag . _prowlPullRequestDetailURL . _prowlPullRequestDetail
 
 printReviews :: PullRequest -> Text
 printReviews pr =

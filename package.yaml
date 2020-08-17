@@ -42,6 +42,7 @@ library:
   - attoparsec
   - aeson
   - directory
+  - tagged
 
   ghc-options:
   - -Werror

@@ -16,17 +16,17 @@ module Prowl.Github.Model
        ,  ProwlException(..)
        ,  GithubOrg(..)
        ,  GithubRepo(..)
-       ,  GithubPR
-       ,  UrlFor
-       ,  SHAFor
+       ,  GithubPRUrl
+       ,  GithubPRSHA
+       ,  TaggedText
        ,  GithubSearchDate(..)
 
           -- Functions
-       ,  mkUrlFor
-       ,  untagUrlFor
-       ,  mkSHAFor
-       ,  untagSHAFor
+       ,  mkTextTag
+       ,  unmkTextTag
        ) where
+
+import Data.Tagged (Tagged(..), untag)
 
 import Control.Exception (Exception)
 import Data.Text (Text)
@@ -59,23 +59,16 @@ newtype PullRequestUser =
 
 newtype PullRequestReviewUser = PullRequestReviewUser Text deriving stock (Show, Eq)
 
-newtype UrlFor a = GithubURL Text deriving stock (Show, Eq)
+type TaggedText a = Tagged a Text
 
-newtype SHAFor a = GithubSHA Text deriving stock (Show, Eq)
+data GithubPRUrl
+data GithubPRSHA
 
-data GithubPR
+mkTextTag :: Text -> TaggedText a
+mkTextTag = Tagged
 
-mkUrlFor :: Text -> UrlFor a
-mkUrlFor = GithubURL
-
-untagUrlFor :: UrlFor a -> Text
-untagUrlFor (GithubURL value) = value
-
-mkSHAFor :: Text -> SHAFor a
-mkSHAFor = GithubSHA
-
-untagSHAFor :: SHAFor a -> Text
-untagSHAFor (GithubSHA value) = value
+unmkTextTag :: TaggedText a -> Text
+unmkTextTag = untag
 
 data PullRequestDetail =
   PullRequestDetail {
@@ -83,8 +76,8 @@ data PullRequestDetail =
   , _prowlPullRequestDetailOrg    :: GithubOrg
   , _prowlPullRequestDetailRepo   :: GithubRepo
   , _prowlPullRequestDetailBranch :: PullRequestBranch
-  , _prowlPullRequestDetailURL    :: UrlFor GithubPR
-  , _prowlPullRequestDetailSHA    :: SHAFor GithubPR
+  , _prowlPullRequestDetailURL    :: TaggedText GithubPRUrl
+  , _prowlPullRequestDetailSHA    :: TaggedText GithubPRSHA
   }  deriving stock (Show, Eq)
 
 data PullRequestReviewState

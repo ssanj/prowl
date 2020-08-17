@@ -8,6 +8,7 @@ import qualified Prowl.Program.ProwlSearch            as APP
 import qualified Prowl.Config.Model                   as P
 import qualified Prowl.Model                          as P
 import qualified Prowl.Commandline.CommandlineOptions as P
+import qualified Prowl.Program.Terminal               as P
 import qualified System.Environment                   as SYS
 import qualified Data.Text.IO                         as T
 
@@ -16,10 +17,11 @@ import Data.String (IsString(..))
 -- Add OptParsecApplicative
 main :: P.ProwlCommand -> IO ()
 main P.ProwlVersionCommand = T.putStrLn P.version
-main (P.ProwlConfigCommand (P.ProwlConfig corg csearchType))= do
+main (P.ProwlConfigCommand (P.ProwlConfig corg csearchType workDir))= do
   auth <- createGithubAuth
   (org, creationDate) <- getArguments corg csearchType
-  APP.main auth org creationDate
+  let handler = P.gitClone workDir
+  APP.main auth org creationDate handler
 
 getArguments :: P.ProwlRepositoryName -> P.SearchType -> IO (P.GithubOrg, P.GithubSearchDate)
 getArguments repo searchType =

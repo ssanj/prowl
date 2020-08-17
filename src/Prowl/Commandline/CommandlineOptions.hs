@@ -49,7 +49,8 @@ parseConfig :: Parser ProwlCommand
 parseConfig =
   let config = ProwlConfig <$>
                 parseRepositoryName <*>
-                parseSearchByDate
+                parseSearchByDate   <*>
+                parseWorkDirectory
   in ProwlConfigCommand <$> config
 
 parseRepositoryName :: Parser ProwlRepositoryName
@@ -87,6 +88,17 @@ parseSearchByUpdatedDate =
     long "updated"                <>
     help "search by updated date (YYYY-MM-DD)" <>
     metavar "UPDATED"
+  )
+
+parseWorkDirectory :: Parser ProwlWorkDir
+parseWorkDirectory =
+  ProwlWorkDir <$> strOption (
+    short 'w'                                       <>
+    long "workdir"                                  <>
+    showDefault                                     <>
+    value (_prowlWorkDirLocation defaultWorkDir)    <>
+    help "working directory"                        <>
+    metavar "WORK_DIR"
   )
 
 versionHelper :: Parser ProwlCommand

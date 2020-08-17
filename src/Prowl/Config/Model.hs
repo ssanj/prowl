@@ -1,4 +1,5 @@
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE OverloadedStrings  #-}
 
 module Prowl.Config.Model
        (
@@ -12,10 +13,14 @@ module Prowl.Config.Model
        ,  SearchType(..)
        ,  ProwlDate(..)
        ,  ProwlWorkDir(..)
+
+          -- Function types
+       ,  defaultWorkDir
        ) where
 
 import Data.Text (Text)
 import Data.ByteString (ByteString)
+
 
 newtype GithubApi = GithubApi Text deriving stock (Eq, Show)
 
@@ -27,6 +32,7 @@ data ProwlConfig =
   ProwlConfig {
     _prowlConfigRepositoryName :: ProwlRepositoryName
   , _prowlConfigSearchType :: SearchType
+  , _prowlConfigWorkingDirectory :: ProwlWorkDir
   } deriving stock (Eq, Show)
 
 newtype ProwlRepositoryName = ProwlRepositoryName Text deriving stock (Eq, Show)
@@ -43,3 +49,6 @@ data SearchType = SearchByCreatedDate ProwlDate
                 | SearchByDateTypeNotSupplied deriving stock (Eq, Show)
 
 newtype ProwlWorkDir = ProwlWorkDir { _prowlWorkDirLocation :: Text } deriving stock (Eq, Show)
+
+defaultWorkDir :: ProwlWorkDir
+defaultWorkDir = ProwlWorkDir "~/.prowl-work"

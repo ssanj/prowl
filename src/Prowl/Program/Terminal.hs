@@ -24,7 +24,7 @@ newtype Args = Args [String]
 gitClone :: C.ProwlWorkDir -> C.PullRequest -> IO ()
 gitClone workingDir pr = do
   let wkdir  = C._prowlWorkDirLocation $ workingDir
-      hash   = C.untagSHAFor . C._prowlPullRequestDetailSHA . C._prowlPullRequestDetail $ pr
+      hash   = C.unmkTextTag . C._prowlPullRequestDetailSHA . C._prowlPullRequestDetail $ pr
       (C.GithubOrg org) = C._prowlPullRequestDetailOrg . C._prowlPullRequestDetail $ pr
       repo   = C._prowlGithubRepo . C._prowlPullRequestDetailRepo . C._prowlPullRequestDetail $ pr
       branch = C._prowlPullRequestBranchValue . C._prowlPullRequestDetailBranch . C._prowlPullRequestDetail $ pr
