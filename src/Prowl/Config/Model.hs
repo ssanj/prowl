@@ -7,6 +7,7 @@ module Prowl.Config.Model
           GithubAuth(..)
        ,  GithubApi
        ,  GithubDomain
+       ,  GithubHttpsCloneUrl
        ,  GithubToken(..)
        ,  ProwlConfig(..)
        ,  ProwlOrganisationName(..)
@@ -18,6 +19,7 @@ module Prowl.Config.Model
           -- Function types
        ,  defaultWorkDir
        ,  getGithubApi
+       ,  getGithubCloneUrl
        ) where
 
 import Prowl.Common.Model
@@ -26,11 +28,14 @@ import Data.Text (Text)
 import Data.ByteString (ByteString)
 
 data GithubApiUrl
+data GithubCloneUrl
 data GithubApiDomain
 
 type GithubApi = TaggedText GithubApiUrl
 
 type GithubDomain = TaggedText GithubApiDomain
+
+type GithubHttpsCloneUrl = TaggedText GithubCloneUrl
 
 newtype GithubToken = GithubToken ByteString
 
@@ -41,6 +46,7 @@ data ProwlConfig =
     _prowlConfigRepositoryName :: ProwlOrganisationName
   , _prowlConfigSearchType :: SearchType
   , _prowlConfigWorkingDirectory :: ProwlWorkDir
+  , _prowlConfigGithubDomain :: GithubDomain
   } deriving stock (Eq, Show)
 
 newtype ProwlOrganisationName = ProwlOrganisationName Text deriving stock (Eq, Show)
@@ -62,4 +68,7 @@ defaultWorkDir :: ProwlWorkDir
 defaultWorkDir = ProwlWorkDir "~/.prowl-work"
 
 getGithubApi :: GithubDomain -> GithubApi
-getGithubApi =  mkTextTag . (\d -> "https://" <>  d <> "/v3/api") . unmkTextTag
+getGithubApi =  mkTextTag . (\d -> "https://" <>  d <> "/api/v3") . unmkTextTag
+
+getGithubCloneUrl :: GithubDomain -> GithubHttpsCloneUrl
+getGithubCloneUrl =  mkTextTag . (\d -> "https://" <> d) . unmkTextTag

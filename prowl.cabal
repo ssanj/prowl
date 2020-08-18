@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 347e7f18e093e1cdf3eb54ccbd1b25789ae1e3046186848bec56cd4b836690fc
+-- hash: 41a8897dbb040aa0ce0a52e6f2daf4c980799555e4e614ce73ee841774e8135c
 
 name:           prowl
-version:        0.1.0.0
+version:        0.2.0.0
 description:    Please see the README on GitHub at <https://github.com/ssanj/prowl#readme>
 homepage:       https://github.com/ssanj/prowl#readme
 bug-reports:    https://github.com/ssanj/prowl/issues
@@ -36,7 +36,6 @@ library
       Prowl.Github.Model
       Prowl.Github.PullRequestDetailService
       Prowl.Github.PullRequestReviewService
-      Prowl.Github.Search.Model
       Prowl.Github.SearchByPRService
       Prowl.Github.ServiceSupport
       Prowl.Github.Time

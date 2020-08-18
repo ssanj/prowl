@@ -18,7 +18,8 @@ module Prowl.Commandline.CommandlineOptions
 import Options.Applicative
 import Prowl.Commandline.Model
 import Prowl.Config.Model
-import Prowl.Github.Time (parseProwlDate)
+import Prowl.Common.Model (mkTextTag)
+import Prowl.Github.Time  (parseProwlDate)
 
 
 import Development.GitRev (gitHash)
@@ -48,19 +49,30 @@ headerVersionText (VersionInfo (ProwlVersion v) (ProwlGitHash h))  = "prowl: " <
 parseConfig :: Parser ProwlCommand
 parseConfig =
   let config = ProwlConfig <$>
-                parseRepositoryName <*>
-                parseSearchByDate   <*>
-                parseWorkDirectory
+                parseOrganisationName <*>
+                parseSearchByDate     <*>
+                parseWorkDirectory    <*>
+                parseGithubDomain
   in ProwlConfigCommand <$> config
 
-parseRepositoryName :: Parser ProwlOrganisationName
-parseRepositoryName =
+parseOrganisationName :: Parser ProwlOrganisationName
+parseOrganisationName =
   ProwlOrganisationName <$>
     strOption (
         short 'o'                            <>
         long "org"                           <>
         help "Github Organisation to search" <>
         metavar "ORG"
+      )
+
+parseGithubDomain :: Parser GithubDomain
+parseGithubDomain =
+  mkTextTag <$>
+    strOption (
+        short 'd'                                             <>
+        long "domain"                                         <>
+        help "Github API Domain. Eg. https://<domain>/api/v3" <>
+        metavar "DOMAIN"
       )
 
 parseSearchByDate :: Parser SearchType

@@ -22,16 +22,16 @@ import qualified Data.Text.IO        as T
 newtype Command = Command String
 newtype Args = Args [String]
 
-gitClone :: C.ProwlWorkDir -> C.PullRequest -> IO ()
-gitClone workingDir pr = do
-  let wkdir  = C._prowlWorkDirLocation $ workingDir
-      hash   = C.unmkTextTag . C._prowlPullRequestDetailSHA . C._prowlPullRequestDetail $ pr
+gitClone :: C.ProwlWorkDir -> C.GithubDomain -> C.PullRequest -> IO ()
+gitClone workingDir domain pr = do
+  let wkdir     = C._prowlWorkDirLocation $ workingDir
+      hash      = C.unmkTextTag . C._prowlPullRequestDetailSHA . C._prowlPullRequestDetail $ pr
       (C.GithubOrg org) = C._prowlPullRequestDetailOrg . C._prowlPullRequestDetail $ pr
-      repo   = C._prowlGithubRepo . C._prowlPullRequestDetailRepo . C._prowlPullRequestDetail $ pr
-      branch = C._prowlPullRequestBranchValue . C._prowlPullRequestDetailBranch . C._prowlPullRequestDetail $ pr
-      api    = C.unmkTextTag .  C._prowlPullRequestDetailApi . C._prowlPullRequestDetail $ pr
+      repo     = C._prowlGithubRepo . C._prowlPullRequestDetailRepo . C._prowlPullRequestDetail $ pr
+      branch   = C._prowlPullRequestBranchValue . C._prowlPullRequestDetailBranch . C._prowlPullRequestDetail $ pr
+      ghcUrl    = C.unmkTextTag . C.getGithubCloneUrl $ domain -- C.unmkTextTag .  C._prowlPullRequestDetailApi . C._prowlPullRequestDetail $ pr
 
-      cloneUrl = joinDirectories "/" [api, org, repo]
+      cloneUrl = joinDirectories "/" [ghcUrl, org, (repo <> ".git")]
       cloneDir = joinDirectories "/" [wkdir, "clones", org, repo, branch, hash]
   -- _ <- runCommandF (Command "git") (Args ["clone", cloneUrl, "-b", branch, cloneDir])
   T.putStrLn $ "git clone " <> cloneUrl <> " -b " <> branch <> " " <> cloneDir
