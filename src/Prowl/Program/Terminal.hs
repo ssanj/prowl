@@ -13,6 +13,7 @@ import System.Exit         (ExitCode(..))
 import System.Directory    (createDirectoryIfMissing)
 
 import qualified Prowl.Config.Model  as C
+import qualified Prowl.Common.Model  as C
 import qualified Prowl.Github.Model  as C
 import qualified System.Process      as P
 import qualified Data.Text           as T
@@ -28,7 +29,7 @@ gitClone workingDir pr = do
       (C.GithubOrg org) = C._prowlPullRequestDetailOrg . C._prowlPullRequestDetail $ pr
       repo   = C._prowlGithubRepo . C._prowlPullRequestDetailRepo . C._prowlPullRequestDetail $ pr
       branch = C._prowlPullRequestBranchValue . C._prowlPullRequestDetailBranch . C._prowlPullRequestDetail $ pr
-      (C.GithubApi api)    = C._prowlPullRequestDetailApi . C._prowlPullRequestDetail $ pr
+      api    = C.unmkTextTag .  C._prowlPullRequestDetailApi . C._prowlPullRequestDetail $ pr
 
       cloneUrl = joinDirectories "/" [api, org, repo]
       cloneDir = joinDirectories "/" [wkdir, "clones", org, repo, branch, hash]

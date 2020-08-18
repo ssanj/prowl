@@ -4,6 +4,7 @@ module Prowl.Handler.DisplaySelection
           handleSelection
        ) where
 
+import qualified Prowl.Common.Model  as P
 import qualified Prowl.Github.Model  as P
 import qualified Prowl.Program.Model as P
 

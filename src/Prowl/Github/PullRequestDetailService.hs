@@ -5,6 +5,7 @@ module Prowl.Github.PullRequestDetailService (getDetailsForPR) where
 
 import Prowl.Github.Model
 import Prowl.Config.Model
+import Prowl.Common.Model
 import Prowl.Github.ServiceSupport
 
 import qualified GitHub as G

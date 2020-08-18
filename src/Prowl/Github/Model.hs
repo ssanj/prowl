@@ -22,16 +22,13 @@ module Prowl.Github.Model
        ,  GithubSearchDate(..)
 
           -- Functions
-       ,  mkTextTag
-       ,  unmkTextTag
        ) where
-
-import Data.Tagged (Tagged(..), untag)
 
 import Control.Exception (Exception)
 import Data.Text (Text)
 import Data.Vector (Vector)
 import Prowl.Config.Model (ProwlDate, GithubApi)
+import Prowl.Common.Model
 
 newtype GithubOrg = GithubOrg Text deriving stock (Show, Eq)
 
@@ -59,16 +56,8 @@ newtype PullRequestUser =
 
 newtype PullRequestReviewUser = PullRequestReviewUser Text deriving stock (Show, Eq)
 
-type TaggedText a = Tagged a Text
-
 data GithubPRUrl
 data GithubPRSHA
-
-mkTextTag :: Text -> TaggedText a
-mkTextTag = Tagged
-
-unmkTextTag :: TaggedText a -> Text
-unmkTextTag = untag
 
 data PullRequestDetail =
   PullRequestDetail {

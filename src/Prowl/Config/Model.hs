@@ -5,10 +5,11 @@ module Prowl.Config.Model
        (
           -- Data types
           GithubAuth(..)
-       ,  GithubApi(..)
+       ,  GithubApi
+       ,  GithubDomain
        ,  GithubToken(..)
        ,  ProwlConfig(..)
-       ,  ProwlRepositoryName(..)
+       ,  ProwlOrganisationName(..)
        ,  ProwlSearchByDateType(..)
        ,  SearchType(..)
        ,  ProwlDate(..)
@@ -16,13 +17,20 @@ module Prowl.Config.Model
 
           -- Function types
        ,  defaultWorkDir
+       ,  getGithubApi
        ) where
+
+import Prowl.Common.Model
 
 import Data.Text (Text)
 import Data.ByteString (ByteString)
 
+data GithubApiUrl
+data GithubApiDomain
 
-newtype GithubApi = GithubApi Text deriving stock (Eq, Show)
+type GithubApi = TaggedText GithubApiUrl
+
+type GithubDomain = TaggedText GithubApiDomain
 
 newtype GithubToken = GithubToken ByteString
 
@@ -30,12 +38,12 @@ data GithubAuth = GithubAuth GithubApi GithubToken
 
 data ProwlConfig =
   ProwlConfig {
-    _prowlConfigRepositoryName :: ProwlRepositoryName
+    _prowlConfigRepositoryName :: ProwlOrganisationName
   , _prowlConfigSearchType :: SearchType
   , _prowlConfigWorkingDirectory :: ProwlWorkDir
   } deriving stock (Eq, Show)
 
-newtype ProwlRepositoryName = ProwlRepositoryName Text deriving stock (Eq, Show)
+newtype ProwlOrganisationName = ProwlOrganisationName Text deriving stock (Eq, Show)
 
 newtype ProwlDate =
   ProwlDate {
@@ -52,3 +60,6 @@ newtype ProwlWorkDir = ProwlWorkDir { _prowlWorkDirLocation :: Text } deriving s
 
 defaultWorkDir :: ProwlWorkDir
 defaultWorkDir = ProwlWorkDir "~/.prowl-work"
+
+getGithubApi :: GithubDomain -> GithubApi
+getGithubApi =  mkTextTag . (\d -> "https://" <>  d <> "/v3/api") . unmkTextTag

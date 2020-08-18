@@ -53,14 +53,14 @@ parseConfig =
                 parseWorkDirectory
   in ProwlConfigCommand <$> config
 
-parseRepositoryName :: Parser ProwlRepositoryName
+parseRepositoryName :: Parser ProwlOrganisationName
 parseRepositoryName =
-  ProwlRepositoryName <$>
+  ProwlOrganisationName <$>
     strOption (
-        short 'r'                          <>
-        long "repository"                  <>
-        help "Github repository to search" <>
-        metavar "REPOSITORY"
+        short 'o'                            <>
+        long "org"                           <>
+        help "Github Organisation to search" <>
+        metavar "ORG"
       )
 
 parseSearchByDate :: Parser SearchType
