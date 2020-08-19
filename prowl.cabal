@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 41a8897dbb040aa0ce0a52e6f2daf4c980799555e4e614ce73ee841774e8135c
+-- hash: c6a07341bd9d92f87eb69650c1866d849865b73b866f985073968a62e8214f8f
 
 name:           prowl
-version:        0.2.0.0
+version:        0.2.0.1
 description:    Please see the README on GitHub at <https://github.com/ssanj/prowl#readme>
 homepage:       https://github.com/ssanj/prowl#readme
 bug-reports:    https://github.com/ssanj/prowl/issues

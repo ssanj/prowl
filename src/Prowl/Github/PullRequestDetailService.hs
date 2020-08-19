@@ -8,14 +8,19 @@ import Prowl.Config.Model
 import Prowl.Common.Model
 import Prowl.Github.ServiceSupport
 
+import Prowl.Github.Data (getOrgAndRepoFromURL)
+
 import qualified GitHub as G
 
 createPullRequestDetail :: GithubApi -> GithubOrg -> G.PullRequest -> GithubRepo -> PullRequestDetail
 createPullRequestDetail api org pr repo =
-  let branch                    = PullRequestBranch . G.pullRequestCommitRef . G.pullRequestHead $ pr
-      sha :: TaggedText GithubPRSHA    = mkTextTag . G.pullRequestCommitSha . G.pullRequestHead $ pr
-      prUrl :: TaggedText GithubPRUrl  = mkTextTag . G.getUrl . G.pullRequestHtmlUrl $ pr
-  in PullRequestDetail api org repo branch prUrl sha
+  let branch                                             = PullRequestBranch . G.pullRequestCommitRef . G.pullRequestHead $ pr
+      sha :: TaggedText GithubPRSHA                      = mkTextTag . G.pullRequestCommitSha . G.pullRequestHead $ pr
+      prUrl :: TaggedText GithubPRUrl                    = mkTextTag . G.getUrl . G.pullRequestHtmlUrl $ pr
+      repoUrlMaybe :: Maybe G.URL                        = (G.repoUrl <$>) . G.pullRequestCommitRepo . G.pullRequestHead $ pr
+      prOrgAndRepoMaybe :: Maybe (GithubOrg, GithubRepo) = repoUrlMaybe >>= getOrgAndRepoFromURL
+      (prOrg, prRepo) = maybe ((org, repo)) id prOrgAndRepoMaybe
+  in PullRequestDetail api prOrg prRepo branch prUrl sha
 
 getDetailsForPR :: GithubAuth -> GithubOrg -> GithubRepo -> PullRequestIssueNumber -> IO PullRequestDetail
 getDetailsForPR auth ghOrg@(GithubOrg org) ghRepo (PullRequestIssueNumber issueNumber) = do
