@@ -13,18 +13,19 @@ import System.Exit         (ExitCode(..))
 import System.Directory    (createDirectoryIfMissing)
 import Control.Monad       (void)
 
-import qualified Prowl.Config.Model  as C
-import qualified Prowl.Common.Model  as C
-import qualified Prowl.Github.Model  as C
-import qualified System.Process      as P
-import qualified Data.Text           as T
-import qualified Data.Text.IO        as T
+import qualified Prowl.Config.Model   as C
+import qualified Prowl.Common.Model   as C
+import qualified Prowl.Github.Model   as C
+import qualified Prowl.Program.Model  as C
+import qualified System.Process       as P
+import qualified Data.Text            as T
+import qualified Data.Text.IO         as T
 
 newtype Command = Command T.Text
 newtype Args = Args [T.Text]
 
-gitClone :: C.ProwlWorkDir -> C.GithubDomain -> C.PullRequest -> IO ()
-gitClone workingDir domain pr = do
+gitClone :: C.ProwlWorkDir -> C.GithubDomain -> (C.TaggedText C.CheckoutDir -> IO ()) -> C.PullRequest -> IO ()
+gitClone workingDir domain handler pr = do
   let wkdir     = C._prowlWorkDirLocation $ workingDir
       hash      = C.unmkTextTag . C._prowlPullRequestDetailSHA . C._prowlPullRequestDetail $ pr
       (C.GithubOrg org) = C._prowlPullRequestDetailOrg . C._prowlPullRequestDetail $ pr
@@ -37,6 +38,7 @@ gitClone workingDir domain pr = do
       cloneDir  = joinDirectories "/" [wkdir, "clones", org, repo, branch, hash]
   T.putStrLn $ "git cloning from " <> clonePath <> ":" <> branch <> " -> " <> cloneDir
   void $ runCommandF (Command "git") (Args ["clone", cloneUrl, "-b", branch, cloneDir])
+  handler (C.mkTextTag cloneDir)
   -- TODO: Run a script based on a heuristic
   -- Accept a function to run after cloning, with the clone directory path as input
 

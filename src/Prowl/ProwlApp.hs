@@ -19,7 +19,7 @@ main P.ProwlVersionCommand = T.putStrLn P.version
 main (P.ProwlConfigCommand (P.ProwlConfig corg csearchType workDir domain))= do
   auth <- createGithubAuth domain
   (org, creationDate) <- getArguments corg csearchType
-  let handler = P.gitClone workDir domain
+  let handler = P.gitClone workDir domain (\_ -> T.putStrLn "called script")
   APP.main auth org creationDate handler
 
 getArguments :: P.ProwlOrganisationName -> P.SearchType -> IO (P.GithubOrg, P.GithubSearchDate)

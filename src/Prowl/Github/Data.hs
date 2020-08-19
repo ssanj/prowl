@@ -15,12 +15,14 @@ import Prowl.Model (GithubRepo(..), GithubOrg(..))
 
 import GitHub as G
 
+-- TODO: Test
 getIssueRepoFromURL :: G.URL -> Maybe GithubRepo
 getIssueRepoFromURL url = do
   matches <- headMay $ scan [re|^https.*/api/v3/repos/.+/(.+)/issues/.+$|] $ G.getUrl url
   repo    <- headMay . snd $ matches
   Just $ GithubRepo repo
 
+-- TODO: Test
 getOrgAndRepoFromURL :: G.URL -> Maybe (GithubOrg, GithubRepo)
 getOrgAndRepoFromURL url = do
   matches <- headMay $ scan [re|^https.*/api/v3/repos/(.+)/(.+)$|] $ G.getUrl url

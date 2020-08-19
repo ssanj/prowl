@@ -5,6 +5,7 @@ module Prowl.Program.Model
        (
           -- Data types
           UserSelection(..)
+       ,  CheckoutDir
        ) where
 
 import GHC.Generics
@@ -24,3 +25,4 @@ data UserSelection =
 instance ToJSON UserSelection where
     toEncoding = genericToEncoding defaultOptions
 
+data CheckoutDir
