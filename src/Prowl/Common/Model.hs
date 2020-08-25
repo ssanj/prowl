@@ -6,9 +6,10 @@ module Prowl.Common.Model
           -- Functions
        ,  mkTextTag
        ,  unmkTextTag
+       ,  retagTextTag
        ) where
 
-import Data.Tagged (Tagged(..), untag)
+import Data.Tagged (Tagged(..), untag, retag)
 import Data.Text   (Text)
 
 type TaggedText a = Tagged a Text
@@ -18,3 +19,6 @@ mkTextTag = Tagged
 
 unmkTextTag :: TaggedText a -> Text
 unmkTextTag = untag
+
+retagTextTag :: TaggedText a -> TaggedText b
+retagTextTag =  retag

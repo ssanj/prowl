@@ -43,6 +43,8 @@ library:
   - aeson
   - directory
   - tagged
+  - containers
+  - extra
 
   ghc-options:
   - -Werror

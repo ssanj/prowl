@@ -30,7 +30,7 @@ import Data.Vector (Vector)
 import Prowl.Config.Model (ProwlDate, GithubApi)
 import Prowl.Common.Model
 
-newtype GithubOrg = GithubOrg Text deriving stock (Show, Eq)
+newtype GithubOrg = GithubOrg { _prowlGithubOrg :: Text } deriving stock (Show, Eq)
 
 newtype GithubRepo = GithubRepo { _prowlGithubRepo :: Text } deriving stock (Show, Eq)
 

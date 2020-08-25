@@ -15,11 +15,15 @@ module Prowl.Config.Model
        ,  SearchType(..)
        ,  ProwlDate(..)
        ,  ProwlWorkDir(..)
+       ,  ProwlConfigDir
+       ,  Language(..)
 
           -- Function types
        ,  defaultWorkDir
        ,  getGithubApi
        ,  getGithubCloneUrl
+       ,  configDir
+       ,  scriptName
        ) where
 
 import Prowl.Common.Model
@@ -64,6 +68,13 @@ data SearchType = SearchByCreatedDate ProwlDate
 
 newtype ProwlWorkDir = ProwlWorkDir { _prowlWorkDirLocation :: Text } deriving stock (Eq, Show)
 
+data ProwlConfigLocation
+
+type ProwlConfigDir = TaggedText ProwlConfigLocation
+
+configDir :: ProwlWorkDir -> ProwlConfigDir
+configDir = mkTextTag . (\wd -> wd <> "/config"). _prowlWorkDirLocation
+
 defaultWorkDir :: ProwlWorkDir
 defaultWorkDir = ProwlWorkDir "~/.prowl-work"
 
@@ -72,3 +83,11 @@ getGithubApi =  mkTextTag . (\d -> "https://" <>  d <> "/api/v3") . unmkTextTag
 
 getGithubCloneUrl :: GithubDomain -> GithubHttpsCloneUrl
 getGithubCloneUrl =  mkTextTag . (\d -> "https://" <> d) . unmkTextTag
+
+scriptName :: Text
+scriptName = "script.sh"
+
+data Language = Scala
+              | Ruby
+              | Haskell deriving stock (Eq, Show, Enum, Bounded)
+
