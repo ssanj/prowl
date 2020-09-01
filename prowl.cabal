@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: db64dbb11b965020ade0859bd57872426a93e309e07b6e385923d61dd42b75e7
+-- hash: beb1dff0077b4a8d019538f0fd7c920a26cfdde7ef4a1df38a9048245c5a0a77
 
 name:           prowl
 version:        0.2.0.1
@@ -42,11 +42,13 @@ library
       Prowl.GithubApi
       Prowl.Handler.DisplaySelection
       Prowl.Model
+      Prowl.Program.FileSystem
       Prowl.Program.Git
       Prowl.Program.Menu
       Prowl.Program.Model
       Prowl.Program.ProwlSearch
       Prowl.Program.Script
+      Prowl.Program.Script2
       Prowl.Program.Terminal
       Prowl.ProwlApp
   other-modules:

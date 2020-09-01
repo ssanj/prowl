@@ -34,7 +34,7 @@ runShellCommandF (Command command) wd =
   fmap T.pack $
     P.readCreateProcess
       (P.shell (T.unpack command)){
-        P.cwd     = Just . T.unpack . unmkTextTag $ wd
+        P.cwd = Just . T.unpack . unmkTextTag $ wd
       }
       ""
 
