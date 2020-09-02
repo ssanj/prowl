@@ -16,6 +16,7 @@ module Prowl.Program.Model
        ,  FileSearchType(..)
        ,  FileOperations(..)
        ,  ConsoleOperations(..)
+       ,  ProgramHandler(..)
        ) where
 
 import Prelude hiding (FilePath)
@@ -76,8 +77,6 @@ data FileFindResult = FileExists FilePathTag | FileDoesNotExist
 -- Or by filter by matching file names in a directory
 data FileSearchType = Direct FilePathTag | ByFilter DirPathTag (FileNameTag -> Bool)
 
-
-
 data FileOperations m =
   FileOperations {
     doesFileExist :: FilePathTag -> m FileFindResult
@@ -88,3 +87,9 @@ data ConsoleOperations m =
   ConsoleOperations {
     writeLn :: Text -> m ()
   }
+
+data ProgramHandler m =
+  ProgramHandler {
+    programHandlerFileOperation :: FileOperations m
+  , programHandlerConsoleOperation :: ConsoleOperations m
+ }

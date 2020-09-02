@@ -13,8 +13,10 @@ import Prowl.Common.Model
 
 import Prowl.Program.FileSystem.FileSystem (absolute, connectDirs, findFile)
 
-import qualified Prowl.Github.Model as P
-import qualified Prowl.Config.Model as P
+import qualified Prowl.Github.Model     as P
+import qualified Prowl.Config.Model     as P
+import qualified Data.Text              as T
+-- import qualified Data.Text.IO           as T
 
 data ScriptFile
 
@@ -23,15 +25,13 @@ type ScriptToRun = TaggedText ScriptFile
 
 repoHandler ::
             Monad m =>
-            FileOperations m    ->
-            ConsoleOperations m ->
+            ProgramHandler m    ->
             P.GithubOrg         ->
             P.GithubRepo        ->
             P.ProwlConfigDir    ->
             m (Maybe ScriptToRun)
 repoHandler
-  fileOps
-  consoleOps
+  (ProgramHandler fileOps consoleOps)
   (P.GithubOrg org)
   (P.GithubRepo repo)
   configDir =
@@ -45,7 +45,50 @@ repoHandler
       case result of
         (FileExists file) -> pure . Just . retagTextTag $ file
         FileDoesNotExist -> pure Nothing
-      --testScript fileOps [(unmkTextTag configDir), org, repo, P.scriptName]
+
+
+byLanguageHandler ::
+                  Monad m =>
+                  ProgramHandler m   ->
+                  P.Language         ->
+                  FileSearchType     ->
+                  P.ProwlConfigDir   ->
+                  m (Maybe ScriptToRun)
+byLanguageHandler
+  (ProgramHandler fileOps consoleOps)
+  lang
+  searchType
+  configDir =
+    do
+      writeLn consoleOps ("called with: " <> (T.pack . show $ lang))
+      foundLangBuildFile <- findFile fileOps searchType
+      case foundLangBuildFile of
+        (FileExists _) ->
+          do
+            let scriptFileDir = connectDirs (retagTextTag configDir) [mkTextTag . T.toLower . T.pack . show $ lang]
+                scriptFile    = absolute scriptFileDir (mkTextTag P.scriptName)
+
+            handleScriptFile <$> findFile fileOps (Direct scriptFile)
+            where
+              handleScriptFile :: FileFindResult ->  Maybe ScriptToRun
+              handleScriptFile (FileExists file) =  Just . retagTextTag $ file
+              handleScriptFile FileDoesNotExist  =  Nothing
+
+        FileDoesNotExist -> pure Nothing
+
+scalaHandler ::
+             Monad m =>
+             ProgramHandler m ->
+             P.ProwlConfigDir ->
+             ProwlCheckoutDir ->
+             m (Maybe ScriptToRun)
+scalaHandler
+  progHandler
+  configDir
+  checkoutDir =
+    do
+      let buildFile = absolute (retagTextTag checkoutDir) (mkTextTag "build.sbt")
+      byLanguageHandler progHandler P.Scala (Direct buildFile) configDir
 
 -- import Prowl.Common.Model
 
@@ -72,10 +115,6 @@ repoHandler
 
 -- -- Possible script file (unchecked)
 -- type PathToScript = TaggedText ScriptPath
-
--- data LanguageIdentifier
-
--- type BuildFile = TaggedText LanguageIdentifier
 
 -- data FileOperations m =
 --   FileOperations {
