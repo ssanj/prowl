@@ -16,7 +16,6 @@ import Prowl.Program.FileSystem.FileSystem (absolute, connectDirs, findFile)
 import qualified Prowl.Github.Model     as P
 import qualified Prowl.Config.Model     as P
 import qualified Data.Text              as T
--- import qualified Data.Text.IO           as T
 
 data ScriptFile
 
@@ -39,13 +38,10 @@ repoHandler
       writeLn consoleOps "repoHandler"
       let relativeDirs :: [DirNameTag] = mkTextTag <$> [org, repo]
           repoDirectory                = connectDirs (retagTextTag configDir) relativeDirs
-          repoScriptFile               = absolute repoDirectory $ (mkTextTag P.scriptName)
-
-      result <- findFile fileOps $ Direct repoScriptFile
+      result <- findFile fileOps $ Direct repoDirectory (mkTextTag P.scriptName)
       case result of
         (FileExists file) -> pure . Just . retagTextTag $ file
         FileDoesNotExist -> pure Nothing
-
 
 byLanguageHandler ::
                   Monad m =>
@@ -62,19 +58,13 @@ byLanguageHandler
     do
       writeLn consoleOps ("called with: " <> (T.pack . show $ lang))
       foundLangBuildFile <- findFile fileOps searchType
-      case foundLangBuildFile of
-        (FileExists _) ->
-          do
-            let scriptFileDir = connectDirs (retagTextTag configDir) [mkTextTag . T.toLower . T.pack . show $ lang]
-                scriptFile    = absolute scriptFileDir (mkTextTag P.scriptName)
+      foundLangScript    <- langugeScript fileOps lang configDir
+      pure $ liftFFR2 (\_ sf -> retagTextTag sf) foundLangBuildFile foundLangScript
 
-            handleScriptFile <$> findFile fileOps (Direct scriptFile)
-            where
-              handleScriptFile :: FileFindResult ->  Maybe ScriptToRun
-              handleScriptFile (FileExists file) =  Just . retagTextTag $ file
-              handleScriptFile FileDoesNotExist  =  Nothing
-
-        FileDoesNotExist -> pure Nothing
+langugeScript :: FileOperations m -> P.Language -> P.ProwlConfigDir -> m FileFindResult
+langugeScript fileOps lang configDir =
+    let scriptFileDir = connectDirs (retagTextTag configDir) [mkTextTag . T.toLower . T.pack . show $ lang]
+    in findFile fileOps (scriptFileIn scriptFileDir)
 
 scalaHandler ::
              Monad m =>
@@ -86,45 +76,84 @@ scalaHandler
   progHandler
   configDir
   checkoutDir =
+      byLanguageHandler progHandler P.Scala (Direct (retagTextTag checkoutDir) (mkTextTag "build.sbt")) configDir
+
+rubyHandler ::
+             Monad m =>
+             ProgramHandler m ->
+             P.ProwlConfigDir ->
+             ProwlCheckoutDir ->
+             m (Maybe ScriptToRun)
+rubyHandler
+  progHandler
+  configDir
+  checkoutDir =
+      byLanguageHandler progHandler P.Ruby (Direct (retagTextTag checkoutDir) (mkTextTag "Gemfile")) configDir
+
+haskellHandler ::
+             Monad m =>
+             ProgramHandler m ->
+             P.ProwlConfigDir ->
+             ProwlCheckoutDir ->
+             m (Maybe ScriptToRun)
+haskellHandler
+  progHandler
+  configDir
+  checkoutDir =
     do
-      let buildFile = absolute (retagTextTag checkoutDir) (mkTextTag "build.sbt")
-      byLanguageHandler progHandler P.Scala (Direct buildFile) configDir
-
--- import Prowl.Common.Model
-
--- -- import Prowl.Program.Terminal (runShellCommandF, Command(..))
--- -- import System.Directory       (doesFileExist)
-
--- import Control.Monad          (void)
--- import Data.Bool              (bool)
--- -- import Data.Foldable          (asum, traverse_)
--- -- import Control.Exception      (catch, IOException)
-
--- import qualified Data.Text           as T
--- import qualified Data.Text.IO        as T
-
--- import qualified Prowl.Config.Model     as P
--- import qualified Prowl.Program.Model    as P
--- import qualified Prowl.Program.Terminal as P
--- import qualified Prowl.Github.Model     as P
+      let buildDir :: DirPathTag  = retagTextTag checkoutDir
+      byLanguageHandler progHandler P.Haskell (ByFilter buildDir ((".cabal" `T.isSuffixOf`) . unmkTextTag)) configDir
 
 
+languageHandlers ::
+                 Monad m =>
+                 [
+                   ProgramHandler m ->
+                   P.ProwlConfigDir ->
+                   ProwlCheckoutDir ->
+                   m (Maybe ScriptToRun)
+                 ]
+
+languageHandlers = [scalaHandler, rubyHandler, haskellHandler]
+
+defaultHandler ::
+             Applicative m =>
+             P.ProwlConfigDir ->
+             m (Maybe ScriptToRun)
+defaultHandler
+  configDir =
+    do
+      let buildDir :: DirPathTag  = retagTextTag configDir
+      pure . Just . retagTextTag . absoluteScript $ buildDir
 
 
--- data ScriptPath
+searchHandlers ::
+               Monad m =>
+               ProgramHandler m    ->
+               P.GithubOrg         ->
+               P.GithubRepo        ->
+               P.ProwlConfigDir    ->
+               ProwlCheckoutDir    ->
+               [m (Maybe ScriptToRun)]
+searchHandlers
+  progHandler
+  org
+  repo
+  configDir
+  checkoutDir =
+    [repoHandler progHandler org repo configDir]                       <>
+    ((\f -> f progHandler configDir checkoutDir) <$> languageHandlers) <>
+    [defaultHandler configDir]
 
--- -- Possible script file (unchecked)
--- type PathToScript = TaggedText ScriptPath
 
--- data FileOperations m =
---   FileOperations {
---     doesFileExist :: T.Text -> m Bool
---   }
+absoluteScript :: DirPathTag -> FilePathTag
+absoluteScript = (flip absolute) scriptFileNameTag
 
--- data ConsoleOperations m =
---   ConsoleOperations {
---     writeLn :: T.Text -> m ()
---   }
+scriptFileIn :: DirPathTag -> FileSearchType
+scriptFileIn = (flip Direct) scriptFileNameTag
+
+scriptFileNameTag :: FileNameTag
+scriptFileNameTag = mkTextTag P.scriptName
 
 -- data ProcessOperations m =
 --   ProcessOperations {
@@ -179,33 +208,6 @@ scalaHandler
 -- runScriptCommand procOps consoleOps wd scriptToRun =
 --   let command = P.Command (unmkTextTag scriptToRun)
 --   in runShellCommandF procOps command (retagTextTag wd) >>= writeLn consoleOps
-
--- testScript :: Monad m => FileOperations m -> [T.Text] -> m (Maybe ScriptToRun)
--- testScript fileOps = scriptHandler fileOps . joinPath
-
--- joinPath :: [T.Text] -> PathToScript
--- joinPath = mkTextTag . T.intercalate slash
-
--- scriptHandler :: Monad m => FileOperations m -> PathToScript -> m (Maybe ScriptToRun)
--- scriptHandler fileOps pathToScript = ifM (doesScriptExitAt fileOps pathToScript) (pure . Just . retagTextTag $ pathToScript) (pure Nothing)
-
--- doesScriptExitAt :: FileOperations m -> PathToScript -> m Bool
--- doesScriptExitAt fileOps = doesFileExist fileOps . unmkTextTag
-
--- findLanguageHandler :: Monad m => FileOperations m -> ConsoleOperations m -> P.Language -> BuildFile -> P.ProwlConfigDir -> P.ProwlCheckoutDir -> m (Maybe ScriptToRun)
--- findLanguageHandler fileOps consoleOps lang buildFile configDir checkoutDir = do
---   writeLn consoleOps ("called with: " <> (T.pack . show $ lang))
---   _ <- testScript fileOps [unmkTextTag checkoutDir, unmkTextTag buildFile]
---   testScript fileOps [unmkTextTag configDir, (T.toLower . T.pack . show $ lang), P.scriptName]
-
--- scalaHandler :: Monad m => FileOperations m -> ConsoleOperations m -> P.ProwlConfigDir -> P.ProwlCheckoutDir -> m (Maybe ScriptToRun)
--- scalaHandler fileOps consoleOps = findLanguageHandler fileOps consoleOps P.Scala (mkTextTag "build.sbt") --specific
-
--- rubyHandler :: Monad m => FileOperations m -> ConsoleOperations m -> P.ProwlConfigDir -> P.ProwlCheckoutDir -> m (Maybe ScriptToRun)
--- rubyHandler fileOps consoleOps = findLanguageHandler fileOps consoleOps P.Ruby (mkTextTag "Gemfile") -- specific
-
--- haskellHandler :: Monad m => FileOperations m -> ConsoleOperations m -> P.ProwlConfigDir -> P.ProwlCheckoutDir -> m (Maybe ScriptToRun)
--- haskellHandler fileOps consoleOps = findLanguageHandler fileOps consoleOps P.Haskell (mkTextTag "stack.yaml") -- specific
 
 -- genericHandler :: Monad m => FileOperations m -> ConsoleOperations m -> P.ProwlConfigDir -> m (Maybe ScriptToRun)
 -- genericHandler fileOps consoleOps configDir = writeLn consoleOps "genericHandler" >> testScript fileOps [unmkTextTag configDir, P.scriptName]

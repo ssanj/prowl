@@ -17,15 +17,22 @@ module Prowl.Program.Model
        ,  FileOperations(..)
        ,  ConsoleOperations(..)
        ,  ProgramHandler(..)
+
+          -- Functions
+       ,  liftFFR2
+       ,  toMaybe
+       ,  fromMaybe
        ) where
 
 import Prelude hiding (FilePath)
 import GHC.Generics
 
-import Data.Text (Text)
-import Data.Aeson (ToJSON(..), genericToEncoding, defaultOptions)
+import Data.Text           (Text)
+import Data.Aeson          (ToJSON(..), genericToEncoding, defaultOptions)
 
 import Prowl.Common.Model (TaggedText)
+
+import qualified Control.Applicative as A
 
 data UserSelection =
   UserSelection {
@@ -72,10 +79,25 @@ type FileNameTag = TaggedText FileName
 -- Result of searching for a file
 data FileFindResult = FileExists FilePathTag | FileDoesNotExist
 
+-- fileFindResult2 :: FileFindResult -> FileFindResult -> (FilePathTag -> FilePathTag -> a) -> Maybe a
+-- fileFindResult2 (FileExists fp1) (FileExists fp2) f = Just $ f fp1 fp2
+-- fileFindResult2 _ _ _ = Nothing
+
+liftFFR2 :: (FilePathTag -> FilePathTag -> a) -> FileFindResult -> FileFindResult -> Maybe a
+liftFFR2 f fp1 fp2 = A.liftA2 f (toMaybe fp1) (toMaybe fp2)
+
+toMaybe :: FileFindResult -> Maybe FilePathTag
+toMaybe (FileExists path) = Just path
+toMaybe FileDoesNotExist = Nothing
+
+fromMaybe :: Maybe FilePathTag -> FileFindResult
+fromMaybe (Just path) = FileExists path
+fromMaybe Nothing     = FileDoesNotExist
+
 -- Type of file search to perform
 -- Either Direct to a specific file
 -- Or by filter by matching file names in a directory
-data FileSearchType = Direct FilePathTag | ByFilter DirPathTag (FileNameTag -> Bool)
+data FileSearchType = Direct DirPathTag FileNameTag | ByFilter DirPathTag (FileNameTag -> Bool)
 
 data FileOperations m =
   FileOperations {

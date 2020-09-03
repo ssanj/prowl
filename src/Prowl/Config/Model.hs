@@ -90,4 +90,3 @@ scriptName = "script.sh"
 data Language = Scala
               | Ruby
               | Haskell deriving stock (Eq, Show, Enum, Bounded)
-

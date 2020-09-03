@@ -26,5 +26,5 @@ connectDirs dpTag dirNameTags =
   in mkTextTag . T.intercalate "/" $ (dirPath : dirNames)
 
 findFile :: FileOperations m -> FileSearchType -> m FileFindResult
-findFile fileOps (Direct filePathTag)    = doesFileExist fileOps filePathTag
+findFile fileOps (Direct dir filename)   = doesFileExist fileOps (absolute dir filename)
 findFile fileOps (ByFilter dirPathTag f) = doesFileMatch fileOps dirPathTag f
