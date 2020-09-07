@@ -2,7 +2,7 @@
 {-# LANGUAGE DerivingStrategies  #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Prowl.Program.FileSystem.FileSystemIO
+module Prowl.Program.IO.FileOperations
        (
           -- Functions
           ioFileOperations

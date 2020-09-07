@@ -9,8 +9,8 @@ module Prowl.Program.Script.ScriptHandler
        ,  rubyHandler
        ,  haskellHandler
        ,  defaultHandler
-       ,  byLanguageHandler
-       ,  langugeScript
+       ,  byLanguageHandler -- for testing
+       ,  langugeScript     -- for testing
        ) where
 
 import Prowl.Program.Model

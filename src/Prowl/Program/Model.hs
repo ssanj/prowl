@@ -140,6 +140,7 @@ data ProgramHandler m =
 data ProcessOperations m =
   ProcessOperations {
     runShellCommand :: T.Command -> T.CmdWorkingDir -> m Text
+  , runTerminalApp  :: T.Command -> T.Args -> m Text
   }
 
 absoluteScript :: DirPathTag -> FilePathTag
