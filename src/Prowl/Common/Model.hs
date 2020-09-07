@@ -7,6 +7,10 @@ module Prowl.Common.Model
        ,  mkTextTag
        ,  unmkTextTag
        ,  retagTextTag
+       ,  tCombine
+       ,  combineT
+       ,  (+<>)
+       ,  (<>+)
        ) where
 
 import Data.Tagged (Tagged(..), untag, retag)
@@ -22,3 +26,19 @@ unmkTextTag = untag
 
 retagTextTag :: TaggedText a -> TaggedText b
 retagTextTag =  retag
+
+tCombine :: Semigroup b => Tagged a b -> b -> b
+tCombine t u = (untag t) <> u
+
+combineT :: Semigroup b => b -> Tagged a b ->  b
+combineT u t = u <> (untag t)
+
+
+infixr 6 +<>
+(+<>) :: Semigroup b => Tagged a b -> b -> b
+(+<>) = tCombine
+
+
+infixr 6 <>+
+(<>+) :: Semigroup b => b -> Tagged a b ->  b
+(<>+) = combineT

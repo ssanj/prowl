@@ -16,6 +16,7 @@ module Prowl.Program.Model
        ,  FileSearchType(..)
        ,  FileOperations(..)
        ,  ConsoleOperations(..)
+       ,  ProcessOperations(..)
        ,  ProgramHandler(..)
 
           -- Functions
@@ -24,13 +25,14 @@ module Prowl.Program.Model
        ,  fromMaybe
        ) where
 
-import Prelude hiding (FilePath)
+import Prelude hiding        (FilePath)
 import GHC.Generics
 
-import Data.Text           (Text)
-import Data.Aeson          (ToJSON(..), genericToEncoding, defaultOptions)
+import Data.Text              (Text)
+import Data.Aeson             (ToJSON(..), genericToEncoding, defaultOptions)
 
-import Prowl.Common.Model (TaggedText)
+import Prowl.Common.Model     (TaggedText)
+import qualified Prowl.Program.Terminal as T
 
 import qualified Control.Applicative as A
 
@@ -112,6 +114,13 @@ data ConsoleOperations m =
 
 data ProgramHandler m =
   ProgramHandler {
-    programHandlerFileOperation :: FileOperations m
-  , programHandlerConsoleOperation :: ConsoleOperations m
+    fileOperations    :: FileOperations m
+  , consoleOperations :: ConsoleOperations m
+  , processOperations :: ProcessOperations m
  }
+
+
+data ProcessOperations m =
+  ProcessOperations {
+    runShellCommand :: T.Command -> T.CmdWorkingDir -> m Text
+  }

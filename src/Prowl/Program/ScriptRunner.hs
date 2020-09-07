@@ -4,23 +4,84 @@
 module Prowl.Program.ScriptRunner
 
        (
---           -- Functions
---           general
+          -- Functions
+          bootstrapCheckout
        ) where
 
 import Prowl.Program.Model
 import Prowl.Common.Model
 
 import Prowl.Program.FileSystem.FileSystem (absolute, connectDirs, findFile)
+import Data.List.NonEmpty                  (NonEmpty((:|)), nonEmpty, (<|))
+import Data.Foldable                       (traverse_)
 
 import qualified Prowl.Github.Model     as P
 import qualified Prowl.Config.Model     as P
 import qualified Data.Text              as T
+import qualified Prowl.Program.Terminal as PT
 
 data ScriptFile
 
 -- Script file (checked)
 type ScriptToRun = TaggedText ScriptFile
+
+bootstrapCheckout ::
+                  Monad m =>
+                  ProgramHandler m    ->
+                  P.GithubOrg         ->
+                  P.GithubRepo        ->
+                  P.ProwlConfigDir    ->
+                  ProwlCheckoutDir    ->
+                  m ()
+bootstrapCheckout
+  progHandler
+  org
+  repo
+  configDir
+  checkoutDir =
+    let handlers   = searchHandlers progHandler org repo configDir checkoutDir
+        defHandler = noHandler . consoleOperations $ progHandler
+    in findHandler progHandler checkoutDir handlers defHandler
+
+findHandler :: Monad m => ProgramHandler m -> ProwlCheckoutDir -> NonEmpty (m (Maybe ScriptToRun)) -> m () -> m ()
+findHandler progHandler checkoutDir (first :| rest) fallback =
+  do
+    maybeScript <- first
+    case maybeScript of
+      (Just script) -> runScript progHandler checkoutDir script
+      Nothing       -> maybe fallback (\handlers -> findHandler progHandler checkoutDir handlers fallback) (nonEmpty rest)
+
+runScript :: Monad m => ProgramHandler m -> ProwlCheckoutDir -> ScriptToRun -> m ()
+runScript (ProgramHandler _ consoleOps processOps) checkoutDir script =
+  do
+    printRunningShellScript consoleOps script checkoutDir
+    output <- runShellCommand processOps (PT.Command . unmkTextTag $ script) (retagTextTag checkoutDir)
+    printOutput consoleOps output
+
+printOutput :: ConsoleOperations m -> T.Text -> m ()
+printOutput consoleOps = writeLn consoleOps
+
+printRunningShellScript :: ConsoleOperations m -> ScriptToRun -> ProwlCheckoutDir -> m ()
+printRunningShellScript consoleOps script checkoutDir =
+  writeLn consoleOps $ (T.pack "Running shell script: " <> script +<> T.pack ", from: " <>+ checkoutDir)
+
+searchHandlers ::
+               Monad m =>
+               ProgramHandler m    ->
+               P.GithubOrg         ->
+               P.GithubRepo        ->
+               P.ProwlConfigDir    ->
+               ProwlCheckoutDir    ->
+               NonEmpty (m (Maybe ScriptToRun))
+searchHandlers
+  progHandler
+  org
+  repo
+  configDir
+  checkoutDir =
+    pure (repoHandler progHandler org repo configDir)                   <>
+    ((\f -> f progHandler configDir checkoutDir) <$> languageHandlers)  <>
+    pure (defaultHandler configDir)
 
 repoHandler ::
             Monad m =>
@@ -30,7 +91,7 @@ repoHandler ::
             P.ProwlConfigDir    ->
             m (Maybe ScriptToRun)
 repoHandler
-  (ProgramHandler fileOps consoleOps)
+  (ProgramHandler fileOps consoleOps _)
   (P.GithubOrg org)
   (P.GithubRepo repo)
   configDir =
@@ -51,7 +112,7 @@ byLanguageHandler ::
                   P.ProwlConfigDir   ->
                   m (Maybe ScriptToRun)
 byLanguageHandler
-  (ProgramHandler fileOps consoleOps)
+  (ProgramHandler fileOps consoleOps _)
   lang
   searchType
   configDir =
@@ -107,14 +168,13 @@ haskellHandler
 
 languageHandlers ::
                  Monad m =>
-                 [
+                 NonEmpty (
                    ProgramHandler m ->
                    P.ProwlConfigDir ->
                    ProwlCheckoutDir ->
                    m (Maybe ScriptToRun)
-                 ]
-
-languageHandlers = [scalaHandler, rubyHandler, haskellHandler]
+                 )
+languageHandlers = scalaHandler <| rubyHandler <| (pure haskellHandler)
 
 defaultHandler ::
              Applicative m =>
@@ -126,26 +186,6 @@ defaultHandler
       let buildDir :: DirPathTag  = retagTextTag configDir
       pure . Just . retagTextTag . absoluteScript $ buildDir
 
-
-searchHandlers ::
-               Monad m =>
-               ProgramHandler m    ->
-               P.GithubOrg         ->
-               P.GithubRepo        ->
-               P.ProwlConfigDir    ->
-               ProwlCheckoutDir    ->
-               [m (Maybe ScriptToRun)]
-searchHandlers
-  progHandler
-  org
-  repo
-  configDir
-  checkoutDir =
-    [repoHandler progHandler org repo configDir]                       <>
-    ((\f -> f progHandler configDir checkoutDir) <$> languageHandlers) <>
-    [defaultHandler configDir]
-
-
 absoluteScript :: DirPathTag -> FilePathTag
 absoluteScript = (flip absolute) scriptFileNameTag
 
@@ -155,29 +195,6 @@ scriptFileIn = (flip Direct) scriptFileNameTag
 scriptFileNameTag :: FileNameTag
 scriptFileNameTag = mkTextTag P.scriptName
 
--- data ProcessOperations m =
---   ProcessOperations {
---     runShellCommandF :: P.Command -> P.CmdWorkingDir -> m T.Text
---   }
-
-
--- slash :: T.Text
--- slash = "/"
-
--- general :: Functor m => FileOperations m -> ProcessOperations m -> m ()
--- general fileOp _ = void $ doesScriptExitAt fileOp (mkTextTag "blee")
-
-
-
--- -- runScript2 :: P.GithubOrg -> P.GithubRepo -> P.ProwlConfigDir -> P.ProwlCheckoutDir ->  IO ()
--- -- runScript2 org repo configDir checkedOutDir = undefined
-
---   -- let scriptHandlers =
---   --       ([repoHandler org repo configDir])-- <> (languageHandlers configDir checkedOutDir) <> [genericHandler configDir])
---   --     chosenScript = asum scriptHandlers
---   -- in (chosenScript >>= runScriptCommand checkedOutDir) `catch` (\e -> handlerInvocationError e >> noHandler)
-
-
 -- -- handlerInvocationError :: IOException -> IO ()
 -- -- handlerInvocationError ex = traverse_ T.putStrLn [
 -- --                                                    "Error executing handlers: " <>  (T.pack . show $ ex)
@@ -185,32 +202,14 @@ scriptFileNameTag = mkTextTag P.scriptName
 -- --                                                  , " - "
 -- --                                                  ]
 
--- -- noHandler :: IO ()
--- -- noHandler = traverse_ T.putStrLn [
--- --                                    "No handlers found."
--- --                                  , "please define a handler."
--- --                                  , "Handlers are run in the following order:"
--- --                                  , "\t1. <working_dir>/config/org/repo/script.sh (repo specific)"
--- --                                  , "\t2. <working_dir>/config/<language>/script.sh (supported languages: scala|ruby|haskell)"
--- --                                  , "\t3. <working_dir>/config/script.sh (generic)"
--- --                                  ]
+noHandler :: Applicative m => ConsoleOperations m -> m ()
+noHandler consoleOps =
+  traverse_ (writeLn consoleOps) [
+                                   "No handlers found."
+                                 , "please define a handler."
+                                 , "Handlers are run in the following order:"
+                                 , "\t1. <working_dir>/config/org/repo/script.sh (repo specific)"
+                                 , "\t2. <working_dir>/config/<language>/script.sh (supported languages: scala|ruby|haskell)"
+                                 , "\t3. <working_dir>/config/script.sh (generic)"
+                                 ]
 
-
--- languageHandlers :: Monad m => FileOperations m -> ConsoleOperations m -> P.ProwlConfigDir -> P.ProwlCheckoutDir -> [m (Maybe ScriptToRun)]
--- languageHandlers fileOps pathToScript configDir checkedOutDir =
---     [ scalaHandler   fileOps pathToScript configDir checkedOutDir
---     , rubyHandler    fileOps pathToScript configDir checkedOutDir
---     , haskellHandler fileOps pathToScript configDir checkedOutDir
---     ]
-
--- -- TODO: run script from checkedOutDir
--- runScriptCommand :: Monad m => ProcessOperations m -> ConsoleOperations m -> P.ProwlCheckoutDir -> ScriptToRun -> m ()
--- runScriptCommand procOps consoleOps wd scriptToRun =
---   let command = P.Command (unmkTextTag scriptToRun)
---   in runShellCommandF procOps command (retagTextTag wd) >>= writeLn consoleOps
-
--- genericHandler :: Monad m => FileOperations m -> ConsoleOperations m -> P.ProwlConfigDir -> m (Maybe ScriptToRun)
--- genericHandler fileOps consoleOps configDir = writeLn consoleOps "genericHandler" >> testScript fileOps [unmkTextTag configDir, P.scriptName]
-
--- ifM :: Monad m => m Bool -> m a -> m a -> m a
--- ifM mbool trueAction falseAction = mbool >>= bool falseAction trueAction
