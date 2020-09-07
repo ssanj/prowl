@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
-module Prowl.Program.Script
+module Prowl.Program.XScript
        (
           -- Functions
           runScript

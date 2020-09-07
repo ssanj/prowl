@@ -1,5 +1,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE OverloadedStrings  #-}
 
 module Prowl.Program.Model
        (
@@ -10,6 +11,7 @@ module Prowl.Program.Model
        ,  DirPathTag
        ,  FileNameTag
        ,  DirNameTag
+       ,  ScriptToRunTag
        ,  ProwlCheckoutDir
        ,  FileFindResult(..)
        ,  FilePathTag
@@ -23,18 +25,26 @@ module Prowl.Program.Model
        ,  liftFFR2
        ,  toMaybe
        ,  fromMaybe
+       ,  absoluteScript
+       ,  absolute
+       ,  scriptFileIn
+       ,  scriptFileNameTag
+       ,  printOutput
+       ,  connectDirs
+       ,  findFile
        ) where
 
-import Prelude hiding        (FilePath)
+
 import GHC.Generics
+import Prowl.Common.Model
 
-import Data.Text              (Text)
-import Data.Aeson             (ToJSON(..), genericToEncoding, defaultOptions)
+import Prelude                      hiding (FilePath)
+import Data.Text                           (Text, intercalate)
+import Data.Aeson                          (ToJSON(..), genericToEncoding, defaultOptions)
+import Prowl.Config.Model                  (scriptName)
 
-import Prowl.Common.Model     (TaggedText)
 import qualified Prowl.Program.Terminal as T
-
-import qualified Control.Applicative as A
+import qualified Control.Applicative    as A
 
 data UserSelection =
   UserSelection {
@@ -62,9 +72,11 @@ data DirPath
 -- A directory name
 data DirName
 
-
 -- A file name (name + extension)
 data FileName
+
+-- Path to a script
+data ScriptFile
 
 -- Absolute path  to a specific file
 type FilePathTag = TaggedText FilePath
@@ -77,6 +89,11 @@ type DirNameTag = TaggedText DirName
 
 -- File name (name + extension)
 type FileNameTag = TaggedText FileName
+
+
+-- Path to a script file that can be run
+type ScriptToRunTag = TaggedText ScriptFile
+
 
 -- Result of searching for a file
 data FileFindResult = FileExists FilePathTag | FileDoesNotExist
@@ -124,3 +141,31 @@ data ProcessOperations m =
   ProcessOperations {
     runShellCommand :: T.Command -> T.CmdWorkingDir -> m Text
   }
+
+absoluteScript :: DirPathTag -> FilePathTag
+absoluteScript = (flip absolute) scriptFileNameTag
+
+scriptFileIn :: DirPathTag -> FileSearchType
+scriptFileIn = (flip Direct) scriptFileNameTag
+
+scriptFileNameTag :: FileNameTag
+scriptFileNameTag = mkTextTag scriptName
+
+printOutput :: ConsoleOperations m -> Text -> m ()
+printOutput consoleOps = writeLn consoleOps
+
+absolute :: DirPathTag -> FileNameTag -> FilePathTag
+absolute dirTag filenameTag =
+  let dir      = unmkTextTag dirTag
+      filename = unmkTextTag filenameTag
+  in mkTextTag (dir <> "/" <> filename)
+
+connectDirs :: DirPathTag -> [DirNameTag] -> DirPathTag
+connectDirs dpTag dirNameTags =
+  let dirPath = unmkTextTag dpTag
+      dirNames = unmkTextTag <$> dirNameTags
+  in mkTextTag . intercalate "/" $ (dirPath : dirNames)
+
+findFile :: FileOperations m -> FileSearchType -> m FileFindResult
+findFile fileOps (Direct dir filename)   = doesFileExist fileOps (absolute dir filename)
+findFile fileOps (ByFilter dirPathTag f) = doesFileMatch fileOps dirPathTag f

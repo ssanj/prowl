@@ -5,7 +5,7 @@ module Prowl.ProwlApp (main) where
 
 import qualified Prowl.GithubApi                      as P
 import qualified Prowl.Program.ProwlSearch            as APP
-import qualified Prowl.Program.Script                 as APP
+import qualified Prowl.Program.XScript                as APP
 import qualified Prowl.Config.Model                   as P
 import qualified Prowl.Model                          as P
 import qualified Prowl.Commandline.CommandlineOptions as P

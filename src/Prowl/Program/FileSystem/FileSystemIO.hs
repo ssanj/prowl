@@ -14,7 +14,6 @@ import Prowl.Program.Model
 
 import Data.Bool                           (bool)
 import Data.Foldable                       (find)
-import Prowl.Program.FileSystem.FileSystem (absolute, findFile)
 
 import qualified System.Directory as D
 import qualified Data.Text        as T
