@@ -19,7 +19,8 @@ module Prowl.Program.Model
        ,  FileOperations(..)
        ,  ConsoleOperations(..)
        ,  ProcessOperations(..)
-       ,  ProgramHandler(..)
+       ,  ProgramOperations(..)
+       ,  ScriptHandler
 
           -- Functions
        ,  liftFFR2
@@ -37,11 +38,13 @@ module Prowl.Program.Model
 
 import GHC.Generics
 import Prowl.Common.Model
+import Prowl.Github.Model
 
 import Prelude                      hiding (FilePath)
 import Data.Text                           (Text, intercalate)
 import Data.Aeson                          (ToJSON(..), genericToEncoding, defaultOptions)
-import Prowl.Config.Model                  (scriptName)
+import Prowl.Config.Model                  (ProwlConfigDir, scriptName)
+
 
 import qualified Prowl.Program.Terminal as T
 import qualified Control.Applicative    as A
@@ -102,6 +105,15 @@ data FileFindResult = FileExists FilePathTag | FileDoesNotExist
 -- fileFindResult2 (FileExists fp1) (FileExists fp2) f = Just $ f fp1 fp2
 -- fileFindResult2 _ _ _ = Nothing
 
+
+type ScriptHandler m =
+                     ProgramOperations m  ->
+                     GithubOrg         ->
+                     GithubRepo        ->
+                     ProwlConfigDir    ->
+                     ProwlCheckoutDir  ->
+                     m ()
+
 liftFFR2 :: (FilePathTag -> FilePathTag -> a) -> FileFindResult -> FileFindResult -> Maybe a
 liftFFR2 f fp1 fp2 = A.liftA2 f (toMaybe fp1) (toMaybe fp2)
 
@@ -129,8 +141,8 @@ data ConsoleOperations m =
     writeLn :: Text -> m ()
   }
 
-data ProgramHandler m =
-  ProgramHandler {
+data ProgramOperations m =
+  ProgramOperations {
     fileOperations    :: FileOperations m
   , consoleOperations :: ConsoleOperations m
   , processOperations :: ProcessOperations m

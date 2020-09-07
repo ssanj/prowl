@@ -19,10 +19,10 @@ import Data.Foldable                       (traverse_)
 
 searchHandlers ::
                Monad m =>
-               ProgramHandler m    ->
-               GithubOrg         ->
-               GithubRepo        ->
-               ProwlConfigDir    ->
+               ProgramOperations m ->
+               GithubOrg           ->
+               GithubRepo          ->
+               ProwlConfigDir      ->
                ProwlCheckoutDir    ->
                NonEmpty (m (Maybe ScriptToRunTag))
 searchHandlers
@@ -38,11 +38,11 @@ searchHandlers
 languageHandlers ::
                  Monad m =>
                  NonEmpty (
-                   ProgramHandler m ->
-                   ProwlConfigDir ->
-                   ProwlCheckoutDir ->
-                   m (Maybe ScriptToRunTag)
-                 )
+                   ProgramOperations m ->
+                   ProwlConfigDir      ->
+                     ProwlCheckoutDir  ->
+                     m (Maybe ScriptToRunTag)
+                   )
 languageHandlers = scalaHandler <| rubyHandler <| (pure haskellHandler)
 
 noHandler :: Applicative m => ConsoleOperations m -> m ()

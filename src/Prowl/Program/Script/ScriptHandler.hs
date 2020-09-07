@@ -22,13 +22,13 @@ import qualified Data.Text    as T
 
 repoHandler ::
             Monad m =>
-            ProgramHandler m    ->
-            GithubOrg         ->
-            GithubRepo        ->
-            ProwlConfigDir    ->
+            ProgramOperations m ->
+            GithubOrg           ->
+            GithubRepo          ->
+            ProwlConfigDir      ->
             m (Maybe ScriptToRunTag)
 repoHandler
-  (ProgramHandler fileOps consoleOps _)
+  (ProgramOperations fileOps consoleOps _)
   (GithubOrg org)
   (GithubRepo repo)
   configDirPath =
@@ -39,13 +39,13 @@ repoHandler
       result <- findFile fileOps $ Direct repoDirectory (mkTextTag scriptName)
       case result of
         (FileExists file) -> pure . Just . retagTextTag $ file
-        FileDoesNotExist -> pure Nothing
+        FileDoesNotExist  -> pure Nothing
 
 scalaHandler ::
              Monad m =>
-             ProgramHandler m ->
-             ProwlConfigDir ->
-             ProwlCheckoutDir ->
+             ProgramOperations m ->
+             ProwlConfigDir      ->
+             ProwlCheckoutDir    ->
              m (Maybe ScriptToRunTag)
 scalaHandler
   progHandler
@@ -55,9 +55,9 @@ scalaHandler
 
 rubyHandler ::
              Monad m =>
-             ProgramHandler m ->
-             ProwlConfigDir ->
-             ProwlCheckoutDir ->
+             ProgramOperations m ->
+             ProwlConfigDir      ->
+             ProwlCheckoutDir    ->
              m (Maybe ScriptToRunTag)
 rubyHandler
   progHandler
@@ -67,9 +67,9 @@ rubyHandler
 
 haskellHandler ::
              Monad m =>
-             ProgramHandler m ->
-             ProwlConfigDir ->
-             ProwlCheckoutDir ->
+             ProgramOperations m ->
+             ProwlConfigDir      ->
+             ProwlCheckoutDir    ->
              m (Maybe ScriptToRunTag)
 haskellHandler
   progHandler
@@ -91,13 +91,13 @@ defaultHandler
 
 byLanguageHandler ::
                   Monad m =>
-                  ProgramHandler m ->
-                  Language         ->
-                  FileSearchType   ->
-                  ProwlConfigDir   ->
+                  ProgramOperations m ->
+                  Language            ->
+                  FileSearchType      ->
+                  ProwlConfigDir      ->
                   m (Maybe ScriptToRunTag)
 byLanguageHandler
-  (ProgramHandler fileOps consoleOps _)
+  (ProgramOperations fileOps consoleOps _)
   lang
   searchType
   configDirPath =

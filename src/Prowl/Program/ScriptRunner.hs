@@ -24,32 +24,32 @@ import qualified Prowl.Program.Terminal             as PT
 
 bootstrapCheckout ::
                   Monad m =>
-                  ProgramHandler m    ->
+                  ProgramOperations m ->
                   P.GithubOrg         ->
                   P.GithubRepo        ->
                   P.ProwlConfigDir    ->
                   ProwlCheckoutDir    ->
                   m ()
 bootstrapCheckout
-  progHandler
+  progOps
   org
   repo
   configDir
   checkoutDir =
-    let handlers   = P.searchHandlers progHandler org repo configDir checkoutDir
-        defHandler = P.noHandler . consoleOperations $ progHandler
-    in findHandler progHandler checkoutDir handlers defHandler
+    let handlers   = P.searchHandlers progOps org repo configDir checkoutDir
+        defHandler = P.noHandler . consoleOperations $ progOps
+    in findHandler progOps checkoutDir handlers defHandler
 
-findHandler :: Monad m => ProgramHandler m -> ProwlCheckoutDir -> NonEmpty (m (Maybe ScriptToRunTag)) -> m () -> m ()
-findHandler progHandler checkoutDir (first :| rest) fallback =
+findHandler :: Monad m => ProgramOperations m -> ProwlCheckoutDir -> NonEmpty (m (Maybe ScriptToRunTag)) -> m () -> m ()
+findHandler progOps checkoutDir (first :| rest) fallback =
   do
     maybeScript <- first
     case maybeScript of
-      (Just script) -> runScript progHandler checkoutDir script
-      Nothing       -> maybe fallback (\handlers -> findHandler progHandler checkoutDir handlers fallback) (nonEmpty rest)
+      (Just script) -> runScript progOps checkoutDir script
+      Nothing       -> maybe fallback (\handlers -> findHandler progOps checkoutDir handlers fallback) (nonEmpty rest)
 
-runScript :: Monad m => ProgramHandler m -> ProwlCheckoutDir -> ScriptToRunTag -> m ()
-runScript (ProgramHandler _ consoleOps processOps) checkoutDir script =
+runScript :: Monad m => ProgramOperations m -> ProwlCheckoutDir -> ScriptToRunTag -> m ()
+runScript (ProgramOperations _ consoleOps processOps) checkoutDir script =
   do
     printRunningShellScript consoleOps script checkoutDir
     output <- runShellCommand processOps (PT.Command . unmkTextTag $ script) (retagTextTag checkoutDir)

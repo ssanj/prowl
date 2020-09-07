@@ -5,7 +5,7 @@ module Prowl.ProwlApp (main) where
 
 import qualified Prowl.GithubApi                      as P
 import qualified Prowl.Program.ProwlSearch            as APP
-import qualified Prowl.Program.XScript                as APP
+import qualified Prowl.Program.IO.ProgramOperations   as M
 import qualified Prowl.Config.Model                   as P
 import qualified Prowl.Model                          as P
 import qualified Prowl.Commandline.CommandlineOptions as P
@@ -13,14 +13,15 @@ import qualified Prowl.Program.Git                    as P
 import qualified System.Environment                   as SYS
 import qualified Data.Text.IO                         as T
 
-import Data.String (IsString(..))
+import Data.String                (IsString(..))
+import Prowl.Program.ScriptRunner (bootstrapCheckout)
 
 main :: P.ProwlCommand -> IO ()
 main P.ProwlVersionCommand = T.putStrLn P.version
 main (P.ProwlConfigCommand (P.ProwlConfig corg csearchType workDir domain))= do
   auth <- createGithubAuth domain
   (org, creationDate) <- getArguments corg csearchType
-  let handler = P.gitClone workDir domain APP.runScript
+  let handler = P.gitClone M.ioProgramOperations workDir domain bootstrapCheckout
   APP.main auth org creationDate handler
 
 getArguments :: P.ProwlOrganisationName -> P.SearchType -> IO (P.GithubOrg, P.GithubSearchDate)
