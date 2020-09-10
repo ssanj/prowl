@@ -99,7 +99,7 @@ type ScriptToRunTag = TaggedText ScriptFile
 
 
 -- Result of searching for a file
-data FileFindResult = FileExists FilePathTag | FileDoesNotExist
+data FileFindResult = FileExists FilePathTag | FileDoesNotExist  deriving stock (Eq, Show)
 
 -- fileFindResult2 :: FileFindResult -> FileFindResult -> (FilePathTag -> FilePathTag -> a) -> Maybe a
 -- fileFindResult2 (FileExists fp1) (FileExists fp2) f = Just $ f fp1 fp2

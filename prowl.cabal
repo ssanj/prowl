@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9cd7c0d921e4fbbec4a4f586b86c5fb103731bf94e12b41a86bb9ea041c5bb36
+-- hash: 46980eddb9fdb7d5addb71f0b242f0ab9073720adc6e73ecaaa9abe330c26cfa
 
 name:           prowl
 version:        0.2.0.1
@@ -100,6 +100,7 @@ test-suite prowl-test
   type: exitcode-stdio-1.0
   main-is: Driver.hs
   other-modules:
+      Prowl.Program.Script.ScriptHandlerSpec
       SampleSpec
       Paths_prowl
   hs-source-dirs:
@@ -107,7 +108,9 @@ test-suite prowl-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N -Werror -Weverything -Wno-unsafe -Wno-safe -Wno-implicit-prelude -Wno-missing-import-lists -Wno-missing-export-lists -Wno-missing-local-signatures
   build-depends:
       base >=4.7 && <5
+    , containers
     , hedgehog
+    , mtl
     , prowl
     , tasty
     , tasty-discover
