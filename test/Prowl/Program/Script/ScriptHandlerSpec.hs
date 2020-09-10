@@ -12,9 +12,6 @@ import Control.Monad.State.Lazy
 
 import Prowl.Config.Model              (ProwlConfigDir, Language(..))
 import Prelude                  hiding (head)
--- import Test.Tasty                      (TestTree)
--- import Test.Tasty                      (testGroup)
--- import Test.Tasty.HUnit                (assertFailure, (@?=), Assertion)
 import Test.Tasty.HUnit                ((@?=), Assertion)
 
 import qualified Data.Text       as T
@@ -139,26 +136,17 @@ unit_byLanguageHandlerWithoutScriptFile  =
 
                                    ]
 
+unit_defaultHandler :: Assertion
+unit_defaultHandler =
+  let configDir             = "/config/dir/path" :: T.Text
+      configDirTag          = (mkTextTag configDir :: ProwlConfigDir)
+      defaultScriptTag      = (mkTextTag "/config/dir/path/script.sh" :: ScriptToRunTag)
+      handlerProg           = defaultHandler configDirTag :: TestM (Maybe ScriptToRunTag)
+      (result, outputState) = runState handlerProg Map.empty
+  in do
+    result      @?= Just defaultScriptTag
+    outputState @?= Map.empty
 
-
-
--- unit_byLanguageHandlerWithFile :: Assertion
--- unit_byLanguageHandlerWithFile =
---      let configDir             = "/config/dir/path" :: T.Text
---          configDirTag          = (mkTextTag configDir :: ProwlConfigDir)
---          languageFilePath      = "/config/dir/path/scala/script.sh" :: T.Text
---          languageFilePathTag   = (mkTextTag languageFilePath :: FilePathTag)
---          progOps               = withFileOperations fileOperationsDoesFileExist undefined
---          handlerProg           = byLanguageHandler progOps Scala (Direct ) configDirTag
---          (result, outputState) = runState handlerProg Map.empty
---    in do
---       result      @?= FileExists languageFilePathTag
---       outputState @?= Map.fromList [
---                                      ("console.writeLn", [TextValue "called with: scala"])
---                                    , ("file.doesFileExist", [(FileResult $ FileExists languageFilePathTag)])
---                                    ]
-
--- type LanguageScriptFinder m = (FileOperations m -> Language -> ProwlConfigDir -> m FileFindResult)
 languageScriptFinder :: Maybe FilePathTag -> LanguageScriptFinder TestM
 languageScriptFinder filepathMaybe _ lang configDir = do
   let langValue      = TextValue . T.pack . show $ lang
@@ -188,15 +176,6 @@ fileOperationsDoesFileExist filePath = do
 
 fileOperationsDoesFileFailExist :: FilePathTag -> TestM FileFindResult
 fileOperationsDoesFileFailExist _ = pure FileDoesNotExist
-
--- fileOperationsDoesFileExist :: Map.Map FileSearchType FilePathTag -> FileSearchType -> FilePathTag -> TestM FileFindResult
--- fileOperationsDoesFileExist fileSearchMap searchType filePath = do
---   resultMap <- get
---   let fileMaybe = M.lookup filePath fileSearchMap
---       findResult = FileExists filePath
---       result = [FileResult findResult]
---   put $ Map.insertWith (<>) "file.doesFileExist" result resultMap
---   pure findResult
 
 withFileOperations :: (FilePathTag -> TestM FileFindResult)                         ->
                       (DirPathTag -> (FileNameTag -> Bool) -> TestM FileFindResult) ->
