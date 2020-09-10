@@ -19,6 +19,7 @@ import Data.List.NonEmpty                  (NonEmpty((:|)), nonEmpty)
 import qualified Prowl.Github.Model                 as P
 import qualified Prowl.Config.Model                 as P
 import qualified Prowl.Program.Script.ScriptSupport as P
+import qualified Prowl.Program.Script.ScriptHandler as P
 import qualified Data.Text                          as T
 import qualified Prowl.Program.Terminal             as PT
 
@@ -36,7 +37,7 @@ bootstrapCheckout
   repo
   configDir
   checkoutDir =
-    let handlers   = P.searchHandlers progOps org repo configDir checkoutDir
+    let handlers   = P.searchHandlers progOps P.languageScript org repo configDir checkoutDir
         defHandler = P.noHandler . consoleOperations $ progOps
     in findHandler progOps checkoutDir handlers defHandler
 

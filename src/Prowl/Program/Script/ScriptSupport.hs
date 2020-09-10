@@ -19,26 +19,29 @@ import Data.Foldable                       (traverse_)
 
 searchHandlers ::
                Monad m =>
-               ProgramOperations m ->
-               GithubOrg           ->
-               GithubRepo          ->
-               ProwlConfigDir      ->
-               ProwlCheckoutDir    ->
+               ProgramOperations m    ->
+               LanguageScriptFinder m ->
+               GithubOrg              ->
+               GithubRepo             ->
+               ProwlConfigDir         ->
+               ProwlCheckoutDir       ->
                NonEmpty (m (Maybe ScriptToRunTag))
 searchHandlers
   progHandler
+  langugeScriptFinder
   org
   repo
   configDirPath
   checkoutDir =
     pure (repoHandler progHandler org repo configDirPath)                   <>
-    ((\f -> f progHandler configDirPath checkoutDir) <$> languageHandlers)  <>
+    ((\f -> f progHandler langugeScriptFinder configDirPath checkoutDir) <$> languageHandlers)  <>
     pure (defaultHandler configDirPath)
 
 languageHandlers ::
                  Monad m =>
                  NonEmpty (
                    ProgramOperations m ->
+                   LanguageScriptFinder m ->
                    ProwlConfigDir      ->
                      ProwlCheckoutDir  ->
                      m (Maybe ScriptToRunTag)

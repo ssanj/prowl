@@ -3,14 +3,16 @@
 
 module Prowl.Program.Script.ScriptHandler
        (
+          -- Data types
+         LanguageScriptFinder
           -- Functions
-          repoHandler
+       ,  repoHandler
        ,  scalaHandler
        ,  rubyHandler
        ,  haskellHandler
        ,  defaultHandler
        ,  byLanguageHandler -- for testing
-       ,  langugeScript     -- for testing
+       ,  languageScript     -- for testing
        ) where
 
 import Prowl.Program.Model
@@ -19,6 +21,8 @@ import Prowl.Github.Model
 import Prowl.Config.Model
 
 import qualified Data.Text    as T
+
+type LanguageScriptFinder m = (FileOperations m -> Language -> ProwlConfigDir -> m FileFindResult)
 
 repoHandler ::
             Monad m =>
@@ -43,41 +47,47 @@ repoHandler
 
 scalaHandler ::
              Monad m =>
-             ProgramOperations m ->
-             ProwlConfigDir      ->
-             ProwlCheckoutDir    ->
+             ProgramOperations m    ->
+             LanguageScriptFinder m ->
+             ProwlConfigDir         ->
+             ProwlCheckoutDir       ->
              m (Maybe ScriptToRunTag)
 scalaHandler
   progHandler
+  languageScriptFinder
   configDirPath
   checkoutDir =
-      byLanguageHandler progHandler Scala (Direct (retagTextTag checkoutDir) (mkTextTag "build.sbt")) configDirPath
+      byLanguageHandler progHandler languageScriptFinder Scala (Direct (retagTextTag checkoutDir) (mkTextTag "build.sbt")) configDirPath
 
 rubyHandler ::
              Monad m =>
-             ProgramOperations m ->
-             ProwlConfigDir      ->
-             ProwlCheckoutDir    ->
+             ProgramOperations m    ->
+             LanguageScriptFinder m ->
+             ProwlConfigDir         ->
+             ProwlCheckoutDir       ->
              m (Maybe ScriptToRunTag)
 rubyHandler
   progHandler
+  languageScriptFinder
   configDirPath
   checkoutDir =
-      byLanguageHandler progHandler Ruby (Direct (retagTextTag checkoutDir) (mkTextTag "Gemfile")) configDirPath
+      byLanguageHandler progHandler languageScriptFinder Ruby (Direct (retagTextTag checkoutDir) (mkTextTag "Gemfile")) configDirPath
 
 haskellHandler ::
              Monad m =>
-             ProgramOperations m ->
-             ProwlConfigDir      ->
-             ProwlCheckoutDir    ->
+             ProgramOperations m    ->
+             LanguageScriptFinder m ->
+             ProwlConfigDir         ->
+             ProwlCheckoutDir       ->
              m (Maybe ScriptToRunTag)
 haskellHandler
   progHandler
+  languageScriptFinder
   configDirPath
   checkoutDir =
     do
       let buildDir :: DirPathTag  = retagTextTag checkoutDir
-      byLanguageHandler progHandler Haskell (ByFilter buildDir ((".cabal" `T.isSuffixOf`) . unmkTextTag)) configDirPath
+      byLanguageHandler progHandler languageScriptFinder Haskell (ByFilter buildDir ((".cabal" `T.isSuffixOf`) . unmkTextTag)) configDirPath
 
 defaultHandler ::
              Applicative m =>
@@ -92,22 +102,24 @@ defaultHandler
 byLanguageHandler ::
                   Monad m =>
                   ProgramOperations m ->
+                  LanguageScriptFinder m ->
                   Language            ->
                   FileSearchType      ->
                   ProwlConfigDir      ->
                   m (Maybe ScriptToRunTag)
 byLanguageHandler
   (ProgramOperations fileOps consoleOps _)
+  languageScriptFinder
   lang
   searchType
   configDirPath =
     do
       writeLn consoleOps ("called with: " <> (T.pack . show $ lang))
       foundLangBuildFile <- findFile fileOps searchType
-      foundLangScript    <- langugeScript fileOps lang configDirPath
+      foundLangScript    <- languageScriptFinder fileOps lang configDirPath
       pure $ liftFFR2 (\_ sf -> retagTextTag sf) foundLangBuildFile foundLangScript
 
-langugeScript :: FileOperations m -> Language -> ProwlConfigDir -> m FileFindResult
-langugeScript fileOps lang configDirPath =
+languageScript :: FileOperations m -> Language -> ProwlConfigDir -> m FileFindResult
+languageScript fileOps lang configDirPath =
     let scriptFileDir = connectDirs (retagTextTag configDirPath) [mkTextTag . T.toLower . T.pack . show $ lang]
     in findFile fileOps (scriptFileIn scriptFileDir)
