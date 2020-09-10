@@ -116,8 +116,13 @@ byLanguageHandler
     do
       writeLn consoleOps ("called with: " <> (T.pack . show $ lang))
       foundLangBuildFile <- findFile fileOps searchType
-      foundLangScript    <- languageScriptFinder fileOps lang configDirPath
-      pure $ liftFFR2 (\_ sf -> retagTextTag sf) foundLangBuildFile foundLangScript
+      case foundLangBuildFile of
+        FileDoesNotExist -> pure Nothing
+        (FileExists _)   -> do
+          foundLangScriptFile <- languageScriptFinder fileOps lang configDirPath
+          case foundLangScriptFile of
+            FileDoesNotExist -> pure Nothing
+            (FileExists scriptFile) -> pure . Just . retagTextTag $ scriptFile
 
 languageScript :: FileOperations m -> Language -> ProwlConfigDir -> m FileFindResult
 languageScript fileOps lang configDirPath =

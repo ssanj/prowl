@@ -71,26 +71,76 @@ unit_languageScriptWithFile =
                                      ("file.doesFileExist", [FileResult $ FileExists languageFilePathTag])
                                    ]
 
-unit_byLanguageHandlerWithFile :: Assertion
-unit_byLanguageHandlerWithFile  =
+unit_byLanguageHandlerFile :: Assertion
+unit_byLanguageHandlerFile  =
+     let configDir             = "/config/dir/path" :: T.Text
+         configDirTag          = (mkTextTag configDir :: ProwlConfigDir)
+         projectDirPathTag     = (mkTextTag $ "/some/project/org/repo" :: DirPathTag)
+         buildFileNameTag      = (mkTextTag $ "build.sbt" :: FileNameTag)
+         scriptFilePathTag     = (mkTextTag $ "/config/dir/path/scala/script.sh" :: FilePathTag)
+         buildFilePathTag      = (mkTextTag $ "/some/project/org/repo/build.sbt" :: FilePathTag)
+         scriptTag             = (retagTextTag scriptFilePathTag :: ScriptToRunTag)
+         fileOps               = withFileOperations fileOperationsDoesFileExist undefined
+         langFinder            = languageScriptFinder (Just scriptFilePathTag)
+         searchType            = Direct projectDirPathTag buildFileNameTag
+         handlerProg           = byLanguageHandler fileOps langFinder Scala searchType configDirTag
+         (result, outputState) = runState handlerProg Map.empty
+   in do
+      result      @?= (Just scriptTag)
+      outputState @?= Map.fromList [
+                                     ("console.writeLn", [TextValue "called with: Scala"])
+                                   , ("file.doesFileExist", [FileResult $ FileExists buildFilePathTag])
+                                   , ("languageScriptFinder", [
+                                                                TextValue "Scala",
+                                                                TextValue configDir,
+                                                                TextValue . unmkTextTag $ scriptFilePathTag
+                                                              ])
+                                   ]
+
+unit_byLanguageHandlerWithoutBuildFile :: Assertion
+unit_byLanguageHandlerWithoutBuildFile  =
+     let configDir             = "/config/dir/path" :: T.Text
+         configDirTag          = (mkTextTag configDir :: ProwlConfigDir)
+         projectDirPathTag     = (mkTextTag $ "/some/project/org/repo" :: DirPathTag)
+         buildFileNameTag      = (mkTextTag $ "build.sbt" :: FileNameTag)
+         scriptFilePathTag     = (mkTextTag $ "/config/dir/path/scala/script.sh" :: FilePathTag)
+         fileOps               = withFileOperations fileOperationsDoesFileFailExist undefined
+         langFinder            = languageScriptFinder (Just scriptFilePathTag)
+         searchType            = Direct projectDirPathTag buildFileNameTag
+         handlerProg           = byLanguageHandler fileOps langFinder Scala searchType configDirTag
+         (result, outputState) = runState handlerProg Map.empty
+   in do
+      result      @?= Nothing
+      outputState @?= Map.fromList [
+                                     ("console.writeLn", [TextValue "called with: Scala"])
+                                   ]
+
+unit_byLanguageHandlerWithoutScriptFile :: Assertion
+unit_byLanguageHandlerWithoutScriptFile  =
      let configDir              = "/config/dir/path" :: T.Text
          configDirTag           = (mkTextTag configDir :: ProwlConfigDir)
          projectDirPathTag      = (mkTextTag $ "/some/project/org/repo" :: DirPathTag)
          sbtFileNameTag         = (mkTextTag $ "build.sbt" :: FileNameTag)
-         scalaScriptFilePathTag = (mkTextTag $ "/config/dir/path/scala/script.sh" :: FilePathTag)
-         sbtFilePathTag         = (mkTextTag $ "/some/project/org/repo/build.sbt" :: FilePathTag)
-         scalaScripTag          = (retagTextTag scalaScriptFilePathTag :: ScriptToRunTag)
+         buildFilePathTag       = (mkTextTag $ "/some/project/org/repo/build.sbt" :: FilePathTag)
          fileOps                = withFileOperations fileOperationsDoesFileExist undefined
-         langFinder             = languageScriptFinder (Just scalaScriptFilePathTag)
+         langFinder             = languageScriptFinder Nothing
          searchType             = Direct projectDirPathTag sbtFileNameTag
          handlerProg            = byLanguageHandler fileOps langFinder Scala searchType configDirTag
          (result, outputState)  = runState handlerProg Map.empty
    in do
-      result      @?= (Just scalaScripTag)
+      result      @?= Nothing
       outputState @?= Map.fromList [
                                      ("console.writeLn", [TextValue "called with: Scala"])
-                                   , ("file.doesFileExist", [FileResult $ FileExists sbtFilePathTag])
+                                   , ("file.doesFileExist", [FileResult $ FileExists buildFilePathTag])
+                                   , ("languageScriptFinder", [
+                                                                TextValue "Scala",
+                                                                TextValue configDir
+                                                              ])
+
                                    ]
+
+
+
 
 -- unit_byLanguageHandlerWithFile :: Assertion
 -- unit_byLanguageHandlerWithFile =
@@ -110,23 +160,34 @@ unit_byLanguageHandlerWithFile  =
 
 -- type LanguageScriptFinder m = (FileOperations m -> Language -> ProwlConfigDir -> m FileFindResult)
 languageScriptFinder :: Maybe FilePathTag -> LanguageScriptFinder TestM
-languageScriptFinder filepathMaybe _ _ _ = pure $ maybe FileDoesNotExist FileExists filepathMaybe
+languageScriptFinder filepathMaybe _ lang configDir = do
+  let langValue      = TextValue . T.pack . show $ lang
+      configDirValue = TextValue $ unmkTextTag configDir
+      filepathValues = maybe [] (\fp -> [TextValue $ unmkTextTag fp]) filepathMaybe
+      stateValues    = langValue : configDirValue : filepathValues
+  updateState "languageScriptFinder" stateValues
+  pure $ maybe FileDoesNotExist FileExists filepathMaybe
+
+updateState :: T.Text -> [ResultType] -> TestM ()
+updateState key values = modify(Map.insertWith (<>) key values)
 
 consoleOperationsWriteLn :: ConsoleOperations TestM
 consoleOperationsWriteLn =
   ConsoleOperations {
     writeLn = \msg ->
       let textValue = [TextValue msg]
-      in  modify(Map.insertWith (<>) "console.writeLn" textValue)
+      in  updateState "console.writeLn" textValue
   }
 
 fileOperationsDoesFileExist :: FilePathTag -> TestM FileFindResult
 fileOperationsDoesFileExist filePath = do
-  resultMap <- get
   let findResult = FileExists filePath
       result = [FileResult findResult]
-  put $ Map.insertWith (<>) "file.doesFileExist" result resultMap
+  updateState "file.doesFileExist" result
   pure findResult
+
+fileOperationsDoesFileFailExist :: FilePathTag -> TestM FileFindResult
+fileOperationsDoesFileFailExist _ = pure FileDoesNotExist
 
 -- fileOperationsDoesFileExist :: Map.Map FileSearchType FilePathTag -> FileSearchType -> FilePathTag -> TestM FileFindResult
 -- fileOperationsDoesFileExist fileSearchMap searchType filePath = do
@@ -136,9 +197,6 @@ fileOperationsDoesFileExist filePath = do
 --       result = [FileResult findResult]
 --   put $ Map.insertWith (<>) "file.doesFileExist" result resultMap
 --   pure findResult
-
-fileOperationsDoesFileFailExist :: FilePathTag -> TestM FileFindResult
-fileOperationsDoesFileFailExist _ = pure FileDoesNotExist
 
 withFileOperations :: (FilePathTag -> TestM FileFindResult)                         ->
                       (DirPathTag -> (FileNameTag -> Bool) -> TestM FileFindResult) ->

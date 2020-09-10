@@ -24,6 +24,7 @@ module Prowl.Program.Model
 
           -- Functions
        ,  liftFFR2
+       ,  bindFF2
        ,  toMaybe
        ,  fromMaybe
        ,  absoluteScript
@@ -48,6 +49,7 @@ import Prowl.Config.Model                  (ProwlConfigDir, scriptName)
 
 import qualified Prowl.Program.Terminal as T
 import qualified Control.Applicative    as A
+import qualified Control.Monad          as M
 
 data UserSelection =
   UserSelection {
@@ -116,6 +118,9 @@ type ScriptHandler m =
 
 liftFFR2 :: (FilePathTag -> FilePathTag -> a) -> FileFindResult -> FileFindResult -> Maybe a
 liftFFR2 f fp1 fp2 = A.liftA2 f (toMaybe fp1) (toMaybe fp2)
+
+bindFF2 :: (FilePathTag -> FilePathTag -> a) -> FileFindResult -> FileFindResult -> Maybe a
+bindFF2 f fp1 fp2 = M.liftM2 f (toMaybe fp1) (toMaybe fp2)
 
 toMaybe :: FileFindResult -> Maybe FilePathTag
 toMaybe (FileExists path) = Just path
