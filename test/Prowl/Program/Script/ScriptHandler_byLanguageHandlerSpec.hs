@@ -11,7 +11,6 @@ import Control.Monad.State.Lazy
 import Prowl.Program.Script.Fixtures
 
 import Prowl.Config.Model              (ProwlConfigDir, Language(..))
-import Prelude                  hiding (head)
 import Test.Tasty.HUnit                ((@?=), Assertion)
 
 import qualified Data.Text       as T
@@ -83,3 +82,40 @@ unit_byLanguageHandlerWithoutScriptFile  =
                                                                 TextValue configDir
                                                               ])
                                    ]
+
+unit_scalaHandler :: Assertion
+unit_scalaHandler =
+    let configDir             = "/config/dir/path" :: T.Text
+        configDirTag          = (mkTextTag configDir :: ProwlConfigDir)
+        checkoutDir           = "/some/project" :: T.Text
+        checkoutDirTag        = (mkTextTag checkoutDir) :: ProwlCheckoutDir
+        buildFileNameTag      = (mkTextTag $ "build.sbt" :: FileNameTag)
+        scriptFilePathTag     = (mkTextTag $ "/config/dir/path/scala/script.sh" :: FilePathTag)
+        scriptTag             = (retagTextTag scriptFilePathTag :: ScriptToRunTag)
+        programOps            = withFileOperations fileOperationsDoesFileExist undefined
+        langHandler           = languageHandlerStub (Just scriptFilePathTag)
+        langFinder            = languageScriptFinder (Just scriptFilePathTag)
+        handlerProg           = scalaHandler programOps langHandler langFinder configDirTag checkoutDirTag
+        (result, outputState) = runState handlerProg Map.empty
+    in do
+      result      @?= (Just scriptTag)
+      outputState @?= Map.fromList [
+                                     ("languageHandler.lang", [TextValue "Scala"])
+                                   , ("languageHandler.searchType", [
+                                                                TextValue "direct",
+                                                                TextValue . unmkTextTag $ checkoutDirTag,
+                                                                TextValue . unmkTextTag $ buildFileNameTag
+                                                              ])
+                                   , ("languageHandler.configDir", [TextValue configDir])
+                                   ]
+
+languageHandlerStub :: Maybe FilePathTag -> LanguageHandler TestM
+languageHandlerStub fpMaybe _ _ lang searchType configDir = do
+  let searchValues =
+        case searchType of
+          (Direct dir filename) -> [TextValue "direct", TextValue . unmkTextTag $ dir, TextValue . unmkTextTag $ filename]
+          (ByFilter dir _) ->[TextValue "byFilter", TextValue . unmkTextTag $ dir]
+  updateState "languageHandler.lang" [TextValue . T.pack . show $ lang]
+  updateState "languageHandler.searchType" searchValues
+  updateState "languageHandler.configDir" [TextValue. unmkTextTag $ configDir]
+  pure $ fmap retagTextTag fpMaybe
