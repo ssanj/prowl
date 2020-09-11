@@ -43,8 +43,8 @@ fileOperationsDoesFileExist filePath = do
   updateState "file.doesFileExist" result
   pure findResult
 
-fileOperationsDoesFileFailExist :: FilePathTag -> TestM FileFindResult
-fileOperationsDoesFileFailExist _ = pure FileDoesNotExist
+fileOperationsDoesFileExistFail :: FilePathTag -> TestM FileFindResult
+fileOperationsDoesFileExistFail _ = pure FileDoesNotExist
 
 withFileOperations :: (FilePathTag -> TestM FileFindResult)                         ->
                       (DirPathTag -> (FileNameTag -> Bool) -> TestM FileFindResult) ->

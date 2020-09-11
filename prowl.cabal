@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e81c0874d7bba582acaac4b62054b1ea25862de6c05d42f944924ec7949723e7
+-- hash: 3276aac0e6ca07263d7b3f09da3cce15a6bae02ec77df1ed35908b1263192a53
 
 name:           prowl
 version:        0.2.0.1
@@ -101,6 +101,8 @@ test-suite prowl-test
   main-is: Driver.hs
   other-modules:
       Prowl.Program.Script.Fixtures
+      Prowl.Program.Script.ScriptHandler_byLanguageHandlerSpec
+      Prowl.Program.Script.ScriptHandler_repoHandlerSpec
       Prowl.Program.Script.ScriptHandlerSpec
       SampleSpec
       Paths_prowl
