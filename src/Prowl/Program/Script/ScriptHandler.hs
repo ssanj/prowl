@@ -5,6 +5,8 @@ module Prowl.Program.Script.ScriptHandler
        (
           -- Data types
          LanguageScriptFinder
+       , LanguageHandler
+       , LanguageHandlerInstance
           -- Functions
        ,  repoHandler
        ,  scalaHandler
@@ -23,6 +25,22 @@ import Prowl.Config.Model
 import qualified Data.Text    as T
 
 type LanguageScriptFinder m = (FileOperations m -> Language -> ProwlConfigDir -> m FileFindResult)
+
+type LanguageHandler m =
+                       ProgramOperations m    ->
+                       LanguageScriptFinder m ->
+                       Language               ->
+                       FileSearchType         ->
+                       ProwlConfigDir         ->
+                       m (Maybe ScriptToRunTag)
+
+type LanguageHandlerInstance m =
+                               ProgramOperations m    ->
+                               LanguageHandler m      ->
+                               LanguageScriptFinder m ->
+                               ProwlConfigDir         ->
+                               ProwlCheckoutDir       ->
+                               m (Maybe ScriptToRunTag)
 
 repoHandler ::
             Monad m =>
@@ -45,49 +63,34 @@ repoHandler
         (FileExists file) -> pure . Just . retagTextTag $ file
         FileDoesNotExist  -> pure Nothing
 
-scalaHandler ::
-             Monad m =>
-             ProgramOperations m    ->
-             LanguageScriptFinder m ->
-             ProwlConfigDir         ->
-             ProwlCheckoutDir       ->
-             m (Maybe ScriptToRunTag)
+scalaHandler :: LanguageHandlerInstance m
 scalaHandler
   progHandler
+  languageHandler
   languageScriptFinder
   configDirPath
   checkoutDir =
-      byLanguageHandler progHandler languageScriptFinder Scala (Direct (retagTextTag checkoutDir) (mkTextTag "build.sbt")) configDirPath
+      languageHandler progHandler languageScriptFinder Scala (Direct (retagTextTag checkoutDir) (mkTextTag "build.sbt")) configDirPath
 
-rubyHandler ::
-             Monad m =>
-             ProgramOperations m    ->
-             LanguageScriptFinder m ->
-             ProwlConfigDir         ->
-             ProwlCheckoutDir       ->
-             m (Maybe ScriptToRunTag)
+rubyHandler :: LanguageHandlerInstance m
 rubyHandler
   progHandler
+  languageHandler
   languageScriptFinder
   configDirPath
   checkoutDir =
-      byLanguageHandler progHandler languageScriptFinder Ruby (Direct (retagTextTag checkoutDir) (mkTextTag "Gemfile")) configDirPath
+      languageHandler progHandler languageScriptFinder Ruby (Direct (retagTextTag checkoutDir) (mkTextTag "Gemfile")) configDirPath
 
-haskellHandler ::
-             Monad m =>
-             ProgramOperations m    ->
-             LanguageScriptFinder m ->
-             ProwlConfigDir         ->
-             ProwlCheckoutDir       ->
-             m (Maybe ScriptToRunTag)
+haskellHandler :: LanguageHandlerInstance m
 haskellHandler
   progHandler
+  languageHandler
   languageScriptFinder
   configDirPath
   checkoutDir =
     do
       let buildDir :: DirPathTag  = retagTextTag checkoutDir
-      byLanguageHandler progHandler languageScriptFinder Haskell (ByFilter buildDir ((".cabal" `T.isSuffixOf`) . unmkTextTag)) configDirPath
+      languageHandler progHandler languageScriptFinder Haskell (ByFilter buildDir ((".cabal" `T.isSuffixOf`) . unmkTextTag)) configDirPath
 
 defaultHandler ::
              Applicative m =>
@@ -99,14 +102,7 @@ defaultHandler
       let buildDir :: DirPathTag  = retagTextTag configDirPath
       pure . Just . retagTextTag . absoluteScript $ buildDir
 
-byLanguageHandler ::
-                  Monad m =>
-                  ProgramOperations m ->
-                  LanguageScriptFinder m ->
-                  Language            ->
-                  FileSearchType      ->
-                  ProwlConfigDir      ->
-                  m (Maybe ScriptToRunTag)
+byLanguageHandler :: Monad m => LanguageHandler m
 byLanguageHandler
   (ProgramOperations fileOps consoleOps _)
   languageScriptFinder

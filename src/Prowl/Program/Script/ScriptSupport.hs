@@ -28,24 +28,16 @@ searchHandlers ::
                NonEmpty (m (Maybe ScriptToRunTag))
 searchHandlers
   progHandler
-  langugeScriptFinder
+  languageScriptFinder
   org
   repo
   configDirPath
   checkoutDir =
-    pure (repoHandler progHandler org repo configDirPath)                   <>
-    ((\f -> f progHandler langugeScriptFinder configDirPath checkoutDir) <$> languageHandlers)  <>
+    pure (repoHandler progHandler org repo configDirPath) <>
+    ((\f -> f progHandler byLanguageHandler languageScriptFinder configDirPath checkoutDir) <$> languageHandlers)  <>
     pure (defaultHandler configDirPath)
 
-languageHandlers ::
-                 Monad m =>
-                 NonEmpty (
-                   ProgramOperations m ->
-                   LanguageScriptFinder m ->
-                   ProwlConfigDir      ->
-                     ProwlCheckoutDir  ->
-                     m (Maybe ScriptToRunTag)
-                   )
+languageHandlers :: NonEmpty (LanguageHandlerInstance m)
 languageHandlers = scalaHandler <| rubyHandler <| (pure haskellHandler)
 
 noHandler :: Applicative m => ConsoleOperations m -> m ()
