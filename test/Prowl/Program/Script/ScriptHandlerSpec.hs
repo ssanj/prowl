@@ -9,6 +9,7 @@ import Prowl.Github.Model
 import Prowl.Program.Model
 import Prowl.Program.Script.ScriptHandler
 import Control.Monad.State.Lazy
+import Prowl.Program.Script.Fixtures
 
 import Prowl.Config.Model              (ProwlConfigDir, Language(..))
 import Prelude                  hiding (head)
@@ -16,10 +17,6 @@ import Test.Tasty.HUnit                ((@?=), Assertion)
 
 import qualified Data.Text       as T
 import qualified Data.Map.Strict as Map
-
-data ResultType  = TextValue T.Text | FileResult FileFindResult deriving stock (Eq, Show)
-type ResultState = Map.Map T.Text [ResultType]
-type TestM       = State ResultState
 
 unit_shouldFindProjectSpecificScriptIfExists :: Assertion
 unit_shouldFindProjectSpecificScriptIfExists =
@@ -133,7 +130,6 @@ unit_byLanguageHandlerWithoutScriptFile  =
                                                                 TextValue "Scala",
                                                                 TextValue configDir
                                                               ])
-
                                    ]
 
 unit_defaultHandler :: Assertion
@@ -146,44 +142,3 @@ unit_defaultHandler =
   in do
     result      @?= Just defaultScriptTag
     outputState @?= Map.empty
-
-languageScriptFinder :: Maybe FilePathTag -> LanguageScriptFinder TestM
-languageScriptFinder filepathMaybe _ lang configDir = do
-  let langValue      = TextValue . T.pack . show $ lang
-      configDirValue = TextValue $ unmkTextTag configDir
-      filepathValues = maybe [] (\fp -> [TextValue $ unmkTextTag fp]) filepathMaybe
-      stateValues    = langValue : configDirValue : filepathValues
-  updateState "languageScriptFinder" stateValues
-  pure $ maybe FileDoesNotExist FileExists filepathMaybe
-
-updateState :: T.Text -> [ResultType] -> TestM ()
-updateState key values = modify(Map.insertWith (<>) key values)
-
-consoleOperationsWriteLn :: ConsoleOperations TestM
-consoleOperationsWriteLn =
-  ConsoleOperations {
-    writeLn = \msg ->
-      let textValue = [TextValue msg]
-      in  updateState "console.writeLn" textValue
-  }
-
-fileOperationsDoesFileExist :: FilePathTag -> TestM FileFindResult
-fileOperationsDoesFileExist filePath = do
-  let findResult = FileExists filePath
-      result = [FileResult findResult]
-  updateState "file.doesFileExist" result
-  pure findResult
-
-fileOperationsDoesFileFailExist :: FilePathTag -> TestM FileFindResult
-fileOperationsDoesFileFailExist _ = pure FileDoesNotExist
-
-withFileOperations :: (FilePathTag -> TestM FileFindResult)                         ->
-                      (DirPathTag -> (FileNameTag -> Bool) -> TestM FileFindResult) ->
-                      ProgramOperations TestM
-withFileOperations doesFileExistTest doesFileMatchTest =
-  defaultProgramOperations {
-    fileOperations = FileOperations doesFileExistTest doesFileMatchTest
-  }
-
-defaultProgramOperations :: ProgramOperations TestM
-defaultProgramOperations = ProgramOperations undefined consoleOperationsWriteLn undefined
